@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎓 大学生全能助手 v1.1</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#333;min-height:100vh}
+.header{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:20px 24px;text-align:center}
+.header h1{font-size:24px;margin-bottom:4px}
+.header .date{font-size:14px;opacity:.85}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #e8e8e8;position:sticky;top:0;z-index:10}
+.tab{flex:1;text-align:center;padding:14px 8px;cursor:pointer;font-size:14px;border:none;background:none;color:#666;transition:.2s;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab:hover{color:#667eea}
+.tab.active{color:#667eea;border-bottom-color:#667eea;font-weight:600}
+.content{padding:16px;max-width:800px;margin:0 auto}
+.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.card-title{font-size:16px;font-weight:600}
+.badge{font-size:12px;padding:2px 8px;border-radius:10px;font-weight:500}
+.badge-red{background:#fff1f0;color:#cf1322}
+.badge-yellow{background:#fffbe6;color:#d48806}
+.badge-green{background:#f6ffed;color:#389e0d}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;transition:.2s}
+.btn-primary{background:#667eea;color:#fff}
+.btn-primary:hover{background:#5a6fd6}
+.btn-danger{background:#fff1f0;color:#cf1322}
+.btn-success{background:#f6ffed;color:#389e0d}
+.btn-sm{padding:4px 10px;font-size:12px}
+.empty{text-align:center;color:#999;padding:30px;font-size:14px}
+.schedule-grid{display:grid;grid-template-columns:60px repeat(5,1fr);gap:2px;background:#e8e8e8;border-radius:8px;overflow:hidden}
+.schedule-cell{background:#fff;padding:8px 4px;min-height:60px;font-size:11px;text-align:center}
+.schedule-cell.header{background:#667eea;color:#fff;font-weight:600;font-size:12px;min-height:auto;padding:8px 2px}
+.schedule-cell.time-label{background:#f5f5f5;font-size:11px;display:flex;align-items:center;justify-content:center;color:#888}
+.schedule-course{background:#e8f0fe;border-left:3px solid #667eea;border-radius:4px;padding:4px;margin:2px 0;font-size:10px;text-align:left;line-height:1.4}
+.schedule-course .c-name{font-weight:600;color:#1a1a1a}
+.schedule-course .c-info{color:#888}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:13px;color:#666;margin-bottom:4px}
+.form-group input,.form-group select{width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:14px;outline:none;transition:.2s}
+.form-group input:focus{border-color:#667eea;box-shadow:0 0 0 2px rgba(102,126,234,.2)}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:#fff;border-radius:16px;padding:24px;width:90%;max-width:420px;max-height:80vh;overflow-y:auto}
+.modal h3{margin-bottom:16px}
+.hidden{display:none!important}
+.semester-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.semester-tag{padding:4px 12px;border-radius:12px;font-size:12px;background:#f0f0f0;cursor:pointer;border:1px solid transparent}
+.semester-tag.active{background:#667eea;color:#fff}
+.countdown-bar{height:6px;background:#f0f0f0;border-radius:3px;margin-top:4px;overflow:hidden}
+.countdown-fill{height:100%;border-radius:3px;transition:width .5s}
+.countdown-fill.red{background:#ff4d4f}
+.countdown-fill.yellow{background:#faad14}
+.countdown-fill.green{background:#52c41a}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎓 大学生全能助手</h1>
+  <div class="date" id="headerDate"></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('today')">📋 今日</button>
+  <button class="tab" onclick="switchTab('schedule')">📅 课表</button>
+  <button class="tab" onclick="switchTab('homework')">📝 作业</button>
+  <button class="tab" onclick="switchTab('exam')">⏰ 考试</button>
+  <button class="tab" onclick="switchTab('dashboard')">📊 仪表盘</button>
+  <button class="tab" onclick="switchTab('settings')">⚙️ 设置</button>
+</div>
+
+<div class="content" id="app"></div>
+
+<!-- 添加模态框 -->
+<div class="modal-overlay hidden" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+// ── 状态 ──
+const API = '/api';
+let currentTab = 'today';
+
+// ── 初始化 ──
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('headerDate').textContent = new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+  switchTab('today');
+});
+
+// ── Tab 切换 ──
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.textContent.includes(tab==='today'?'今日':tab==='schedule'?'课表':tab==='homework'?'作业':tab==='exam'?'考试':tab==='dashboard'?'仪表盘':'设置')));
+  if (tab === 'today') loadToday();
+  else if (tab === 'schedule') loadSchedule();
+  else if (tab === 'homework') loadHomework();
+  else if (tab === 'exam') loadExam();
+  else if (tab === 'dashboard') loadDashboard();
+  else if (tab === 'settings') loadSettings();
+}
+
+// ── 今日提醒 ──
+async function loadToday() {
+  const r = await fetch(`${API}/remind`).then(r=>r.json());
+  let h = `<div class="semester-bar"><span style="font-size:13px;color:#888">📚 ${r.semester}</span></div>`;
+
+  // 课程
+  h += '<div class="card"><div class="card-header"><span class="card-title">📅 今日课程</span><span class="badge badge-green">'+r.courses.length+' 节</span></div>';
+  if (r.courses.length === 0) h += '<div class="empty">🎉 今天没有课！</div>';
+  else r.courses.forEach(c => h += `<div style="padding:6px 0;border-bottom:1px solid #f5f5f5">${c.time} <b>${c.course}</b> @ ${c.location||''}</div>`);
+  h += '</div>';
+
+  // 紧急作业
+  h += '<div class="card"><div class="card-header"><span class="card-title">📝 紧急作业</span><span class="badge '+ (r.urgent_homework.length>0?'badge-red':'badge-green') +'">'+r.urgent_homework.length+' 项</span></div>';
+  if (r.urgent_homework.length === 0) h += '<div class="empty">✅ 无紧急作业</div>';
+  else r.urgent_homework.forEach(hw => h += `<div style="padding:6px 0;border-bottom:1px solid #f5f5f5">🔴 <b>${hw.course}</b>: ${hw.title} <span style="color:#cf1322">剩 ${hw.days_left} 天</span></div>`);
+  h += '</div>';
+
+  // 临近考试
+  h += '<div class="card"><div class="card-header"><span class="card-title">⏰ 临近考试</span><span class="badge '+ (r.near_exams.length>0?'badge-yellow':'badge-green') +'">'+r.near_exams.length+' 场</span></div>';
+  if (r.near_exams.length === 0) h += '<div class="empty">✅ 14天内无考试</div>';
+  else r.near_exams.forEach(e => {
+    let cls = e.days<=3?'red':(e.days<=7?'yellow':'green');
+    h += `<div style="padding:8px 0;border-bottom:1px solid #f5f5f5"><b>${e.exam.course}</b> - ${e.exam.type}<br>📅 ${e.exam.date} 剩 ${e.days} 天<div class="countdown-bar"><div class="countdown-fill ${cls}" style="width:${Math.max(5,100-e.days*3)}%"></div></div></div>`;
+  });
+  h += '</div>';
+
+  document.getElementById('app').innerHTML = h;
+}
+
+// ── 课表 ──
+async function loadSchedule() {
+  const r = await fetch(`${API}/schedule`).then(r=>r.json());
+  const sem = await fetch(`${API}/semester`).then(r=>r.json());
+  let h = '<div class="semester-bar">'+sem.semesters.map(s=>`<span class="semester-tag${s.name===sem.current?' active':''}" onclick="switchSemester('${s.name}')">${s.name}</span>`).join('')+'</div>';
+
+  // 按天分组
+  const weekdays = ['周一','周二','周三','周四','周五','周六','周日'];
+  for (let d=1; d<=7; d++) {
+    const courses = r.courses.filter(c=>c.day===d).sort((a,b)=>a.time.localeCompare(b.time));
+    h += '<div class="card"><div class="card-header"><span class="card-title">'+weekdays[d-1]+'</span><span class="badge badge-green">'+courses.length+' 门</span></div>';
+    if (courses.length===0) h += '<div class="empty">无课</div>';
+    else courses.forEach(c => h += `<div style="padding:6px 0;border-bottom:1px solid #f5f5f5">${c.time} <b>${c.course}</b> ${c.teacher||''} @ ${c.location||''} <span style="color:#888;font-size:12px">第${c.weeks||'1-16'}周</span></div>`);
+    h += '</div>';
+  }
+
+  h += `<div style="text-align:center;margin-top:12px"><button class="btn btn-primary" onclick="showAddCourse()">+ 添加课程</button></div>`;
+  document.getElementById('app').innerHTML = h;
+}
+
+function showAddCourse() {
+  document.getElementById('modalContent').innerHTML = `
+    <h3>📅 添加课程</h3>
+    <div class="form-group"><label>星期</label><select id="f-day">${[1,2,3,4,5,6,7].map(d=>`<option value="${d}">周${'一二三四五六日'[d-1]}</option>`).join('')}</select></div>
+    <div class="form-group"><label>时间</label><input id="f-time" placeholder="08:00-09:40"></div>
+    <div class="form-group"><label>课程名称</label><input id="f-course" placeholder="高等数学"></div>
+    <div class="form-group"><label>教师</label><input id="f-teacher" placeholder="张老师"></div>
+    <div class="form-group"><label>地点</label><input id="f-location" placeholder="教1-301"></div>
+    <div class="form-group"><label>周次</label><input id="f-weeks" value="1-16"></div>
+    <button class="btn btn-primary" onclick="addCourse()" style="width:100%">添加</button>
+  `;
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+async function addCourse() {
+  const course = {
+    day: parseInt(document.getElementById('f-day').value),
+    time: document.getElementById('f-time').value,
+    course: document.getElementById('f-course').value,
+    teacher: document.getElementById('f-teacher').value,
+    location: document.getElementById('f-location').value,
+    weeks: document.getElementById('f-weeks').value,
+  };
+  await fetch(`${API}/schedule`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(course)});
+  closeModal();
+  loadSchedule();
+}
+
+async function switchSemester(name) {
+  await fetch(`${API}/semester/switch`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+  loadSchedule();
+}
+
+// ── 作业 ──
+async function loadHomework() {
+  const r = await fetch(`${API}/homework`).then(r=>r.json());
+  const pending = r.items.filter(h=>!h.done).sort((a,b)=>a.deadline.localeCompare(b.deadline));
+  const done = r.items.filter(h=>h.done);
+  let h = '';
+
+  h += '<div class="card"><div class="card-header"><span class="card-title">⏳ 待完成</span><span class="badge badge-yellow">'+pending.length+' 项</span></div>';
+  if (pending.length===0) h += '<div class="empty">✅ 全部完成！</div>';
+  else pending.forEach(hw => {
+    const days = Math.ceil((new Date(hw.deadline)-new Date())/(86400000));
+    const u = days<=1?'🔴':(days<=3?'🟡':'🟢');
+    h += `<div style="padding:8px 0;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center">
+      <div>${u} <b>${hw.course}</b>: ${hw.title}<br><span style="color:#888;font-size:12px">截止: ${hw.deadline} (剩 ${days} 天) ${hw.note||''}</span></div>
+      <button class="btn btn-success btn-sm" onclick="doneHomework(${hw.id})">✓ 完成</button>
+    </div>`;
+  });
+  h += '</div>';
+
+  if (done.length > 0) {
+    h += '<div class="card"><div class="card-header"><span class="card-title">✅ 已完成</span><span class="badge badge-green">'+done.length+' 项</span></div>';
+    done.slice(-5).forEach(hw => h += `<div style="padding:4px 0;color:#888;font-size:13px">✓ ${hw.course}: ${hw.title}</div>`);
+    h += '</div>';
+  }
+
+  h += `<div style="text-align:center;margin-top:12px"><button class="btn btn-primary" onclick="showAddHomework()">+ 添加作业</button></div>`;
+  document.getElementById('app').innerHTML = h;
+}
+
+function showAddHomework() {
+  document.getElementById('modalContent').innerHTML = `
+    <h3>📝 添加作业</h3>
+    <div class="form-group"><label>课程名称</label><input id="f-hw-course" placeholder="高等数学"></div>
+    <div class="form-group"><label>作业标题</label><input id="f-hw-title" placeholder="习题3.2"></div>
+    <div class="form-group"><label>截止日期</label><input id="f-hw-deadline" type="date"></div>
+    <div class="form-group"><label>备注</label><input id="f-hw-note" placeholder="交纸质版"></div>
+    <button class="btn btn-primary" onclick="addHomework()" style="width:100%">添加</button>
+  `;
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+async function addHomework() {
+  const hw = {
+    course: document.getElementById('f-hw-course').value,
+    title: document.getElementById('f-hw-title').value,
+    deadline: document.getElementById('f-hw-deadline').value,
+    note: document.getElementById('f-hw-note').value,
+  };
+  await fetch(`${API}/homework`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(hw)});
+  closeModal();
+  loadHomework();
+}
+
+async function doneHomework(id) {
+  await fetch(`${API}/homework/${id}`, {method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({done:true})});
+  loadHomework();
+}
+
+// ── 考试 ──
+async function loadExam() {
+  const r = await fetch(`${API}/exam`).then(r=>r.json());
+  const items = r.items.sort((a,b)=>a.date.localeCompare(b.date));
+  let h = '';
+  if (items.length===0) h += '<div class="card"><div class="empty">📭 暂无考试</div></div>';
+  else items.forEach(e => {
+    const days = Math.ceil((new Date(e.date)-new Date())/(86400000));
+    const bar = days<0?'⚫':(days<=3?'🔴':(days<=14?'🟡':'🟢'));
+    const status = days<0?'已结束':`剩 ${days} 天`;
+    let cls = days<=3?'red':(days<=7?'yellow':'green');
+    h += `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:start">
+        <div><b>${bar} ${e.course}</b> - ${e.type}<br><span style="color:#888;font-size:13px">📅 ${e.date} | ${status} | 📍 ${e.location||'待定'}</span></div>
+        <button class="btn btn-danger btn-sm" onclick="deleteExam(${e.id})">删除</button>
+      </div>
+      <div class="countdown-bar" style="margin-top:8px"><div class="countdown-fill ${cls}" style="width:${days<0?0:Math.max(3,100-days*2)}%"></div></div>
+    </div>`;
+  });
+  h += `<div style="text-align:center;margin-top:12px"><button class="btn btn-primary" onclick="showAddExam()">+ 添加考试</button></div>`;
+  document.getElementById('app').innerHTML = h;
+}
+
+function showAddExam() {
+  document.getElementById('modalContent').innerHTML = `
+    <h3>📋 添加考试</h3>
+    <div class="form-group"><label>课程名称</label><input id="f-ex-course" placeholder="高等数学"></div>
+    <div class="form-group"><label>考试类型</label><select id="f-ex-type"><option>期中考试</option><option>期末考试</option><option>考试</option></select></div>
+    <div class="form-group"><label>考试日期</label><input id="f-ex-date" type="date"></div>
+    <div class="form-group"><label>地点</label><input id="f-ex-location" placeholder="教1-301"></div>
+    <div class="form-group"><label>备注</label><input id="f-ex-note" placeholder="第1-4章"></div>
+    <button class="btn btn-primary" onclick="addExam()" style="width:100%">添加</button>
+  `;
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+async function addExam() {
+  const exam = {
+    course: document.getElementById('f-ex-course').value,
+    type: document.getElementById('f-ex-type').value,
+    date: document.getElementById('f-ex-date').value,
+    location: document.getElementById('f-ex-location').value,
+    note: document.getElementById('f-ex-note').value,
+  };
+  await fetch(`${API}/exam`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(exam)});
+  closeModal();
+  loadExam();
+}
+
+async function deleteExam(id) {
+  if (!confirm('确定删除？')) return;
+  await fetch(`${API}/exam/${id}`, {method:'DELETE'});
+  loadExam();
+}
+
+// ── 仪表盘 ──
+async function loadDashboard() {
+  const d = await fetch(`${API}/dashboard`).then(r=>r.json());
+  let h = '';
+
+  // 卡片1: 复习进度
+  h += '<div class="card"><div class="card-header"><span class="card-title">📖 复习进度</span></div>';
+  h += `<p style="font-size:24px;font-weight:600;margin:8px 0">${d.review.mastered}/${d.review.total} <span style="font-size:14px;color:#888">已掌握</span></p>`;
+  h += `<div class="countdown-bar"><div class="countdown-fill green" style="width:${d.review.total>0?Math.round(d.review.mastered/d.review.total*100):0}%"></div></div>`;
+  h += '</div>';
+
+  // 卡片2: 成长统计
+  h += '<div class="card"><div class="card-header"><span class="card-title">🌱 成长统计</span></div>';
+  h += `<div style="display:flex;gap:24px;margin:8px 0"><div><div style="font-size:24px;font-weight:600">${d.growth.streak_days}</div><div style="font-size:12px;color:#888">连续打卡(天)</div></div><div><div style="font-size:24px;font-weight:600">${d.growth.total_hours}</div><div style="font-size:12px;color:#888">总学习时长(小时)</div></div></div>`;
+  h += '</div>';
+
+  // 卡片3: 目标进度
+  h += '<div class="card"><div class="card-header"><span class="card-title">🎯 目标进度</span></div>';
+  if (d.goals && d.goals.length > 0) {
+    d.goals.forEach(g => {
+      const pct = g.total>0?Math.round(g.done/g.total*100):0;
+      h += `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${g.name}</span><span>${g.done}/${g.total}</span></div><div class="countdown-bar"><div class="countdown-fill ${pct>=100?'green':(pct>=50?'yellow':'red')}" style="width:${pct}%"></div></div></div>`;
+    });
+  } else {
+    h += '<div class="empty">暂无目标</div>';
+  }
+  h += '</div>';
+
+  // 卡片4: 刷题统计
+  h += '<div class="card"><div class="card-header"><span class="card-title">✏️ 刷题统计</span></div>';
+  h += `<div style="display:flex;gap:24px;margin:8px 0"><div><div style="font-size:24px;font-weight:600">${d.practice.total}</div><div style="font-size:12px;color:#888">总做题数</div></div><div><div style="font-size:24px;font-weight:600">${d.practice.accuracy}%</div><div style="font-size:12px;color:#888">正确率</div></div></div>`;
+  // 小柱状图模拟学习趋势
+  if (d.practice.trend && d.practice.trend.length > 0) {
+    const maxVal = Math.max(...d.practice.trend);
+    h += '<div style="margin-top:10px;font-size:12px;color:#888">最近学习趋势</div>';
+    h += '<div style="display:flex;align-items:flex-end;gap:4px;height:60px;margin-top:4px">';
+    d.practice.trend.forEach(v => {
+      const h_px = maxVal>0?Math.max(4,Math.round(v/maxVal*56)):4;
+      h += `<div style="flex:1;background:#667eea;border-radius:3px 3px 0 0;height:${h_px}px;min-height:2px"></div>`;
+    });
+    h += '</div>';
+  }
+  h += '</div>';
+
+  // 卡片5: 错题
+  h += '<div class="card"><div class="card-header"><span class="card-title">❌ 错题</span></div>';
+  h += `<p style="font-size:24px;font-weight:600;margin:8px 0">${d.mistakes.unreviewed} <span style="font-size:14px;color:#888">道</span></p><p style="font-size:13px;color:#888">未复习错题</p>`;
+  h += '</div>';
+
+  // 卡片6: 最近考试
+  h += '<div class="card"><div class="card-header"><span class="card-title">⏰ 最近考试</span></div>';
+  if (d.upcoming_exam) {
+    const e = d.upcoming_exam;
+    h += `<p style="font-size:16px;font-weight:600;margin:4px 0">${e.course}</p><p style="font-size:13px;color:#888">📅 ${e.date}</p>`;
+    h += `<div style="margin-top:8px;font-size:24px;font-weight:600;color:#667eea">${e.days_left} <span style="font-size:14px;color:#888">天倒计时</span></div>`;
+  } else {
+    h += '<div class="empty">暂无考试</div>';
+  }
+  h += '</div>';
+
+  // 导出按钮
+  h += '<div style="text-align:center;margin-top:12px"><button class="btn btn-primary" onclick="window.open(\'/api/export/excel\',\'_blank\')">📥 导出 Excel 报表</button></div>';
+
+  document.getElementById('app').innerHTML = h;
+}
+
+// ── 设置 ──
+async function loadSettings() {
+  const sem = await fetch(`${API}/semester`).then(r=>r.json());
+  let h = '<div class="card"><div class="card-title" style="margin-bottom:12px">📚 学期管理</div>';
+  sem.semesters.forEach(s => {
+    h += `<div style="padding:8px 0;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center">
+      <span>${s.name} ${s.name===sem.current?'← 当前':''} (${s.course_count} 门课)</span>
+      ${s.name!==sem.current?`<button class="btn btn-primary btn-sm" onclick="switchSemester('${s.name}')">切换</button>`:''}
+    </div>`;
+  });
+  h += `<div style="margin-top:12px;display:flex;gap:8px"><input id="f-new-sem" placeholder="新学期名称" style="flex:1;padding:8px;border:1px solid #d9d9d9;border-radius:8px"><button class="btn btn-primary" onclick="createSemester()">创建</button></div>`;
+  h += '</div>';
+
+  h += '<div class="card"><div class="card-title" style="margin-bottom:12px">💾 数据导出</div>';
+  h += '<button class="btn btn-primary" onclick="exportICS()" style="margin-right:8px">导出 iCal 日历</button>';
+  h += '<p style="margin-top:8px;color:#888;font-size:12px">导出后可导入 Google Calendar / Apple Calendar / Outlook</p>';
+  h += '</div>';
+
+  h += '<div class="card"><div class="card-title" style="margin-bottom:12px">📁 数据位置</div>';
+  h += '<code style="background:#f5f5f5;padding:4px 8px;border-radius:4px;font-size:13px">~/.student-assistant/semesters/</code>';
+  h += '<p style="margin-top:4px;color:#888;font-size:12px">所有数据以 JSON 格式存储，可手动编辑</p>';
+  h += '</div>';
+
+  document.getElementById('app').innerHTML = h;
+}
+
+async function createSemester() {
+  const name = document.getElementById('f-new-sem').value.trim();
+  if (!name) return;
+  await fetch(`${API}/semester/switch`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+  loadSettings();
+}
+
+function exportICS() {
+  window.open('/api/schedule/export', '_blank');
+}
+
+// ── 通用 ──
+function closeModal() {
+  document.getElementById('modalOverlay').classList.add('hidden');
+}
+</script>
+</body>
+</html>
