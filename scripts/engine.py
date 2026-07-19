@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-大学日程计划 v3.0 — 原创设计的大学生日程与学习管理工具（非交互式重构版）
+大学日程计划 v1.3 — 原创设计的大学生日程与学习管理工具（非交互式重构版）
 功能：任务管理、子任务、优先级、标签、清单分类、四象限、
       番茄专注、习惯打卡、倒数日、过滤器、今日概览、
       课表、作业、考试、多学期管理、数据导出
@@ -639,7 +639,7 @@ def semester_list():
 # ── CLI ──
 def main():
     p = argparse.ArgumentParser(
-        description="🎓 大学日程计划 v3.0 — 非交互式参数驱动（AI 可直接调用）",
+        description="🎓 大学日程计划 v1.3 — 非交互式参数驱动（AI 可直接调用）",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 优先级统一: 1=高🔴 2=中🟡 3=低🟢 0=无⚪

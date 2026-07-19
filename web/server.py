@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-大学日程计划 v3.0 — Web API Server（零依赖，纯标准库）
+大学日程计划 v1.3 — Web API Server（零依赖，纯标准库）
 基于 http.server 实现，无需 Flask，下载即用。
 """
 
@@ -484,7 +484,7 @@ def run(port=5000, host="0.0.0.0", open_browser=False):
 
     print()
     print("=" * 52)
-    print("  📚 大学日程计划 v3.0 — Web 服务已启动")
+    print("  📚 大学日程计划 v1.3 — Web 服务已启动")
     print("=" * 52)
     print(f"  💻 本机访问：{local_url}")
     print(f"  📱 手机访问：{lan_url}")
