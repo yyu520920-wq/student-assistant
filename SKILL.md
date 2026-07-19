@@ -5,7 +5,7 @@ description: |
   任务管理、子任务、优先级、标签、清单分类、四象限、番茄专注、习惯打卡、
   倒数日、智能过滤器、今日概览、课表、作业、考试、多学期管理、数据导出。
   支持移动端 Web UI（零依赖，手机直连查看和编辑计划）。
-  触发词：任务 | 清单 | 番茄 | 习惯 | 打卡 | 倒数日 | 四象限 | 课表 | 作业 | 考试 | 今日概览 | 学期 | 复习计划 | 日程
+  触发词：任务 | 清单 | 番茄 | 习惯 | 打卡 | 倒数日 | 四象限 | 课表 | 课表图片 | 导入课表 | 识别课表 | 作业 | 考试 | 今日概览 | 学期 | 复习计划 | 日程
 ---
 
 # 📚 大学日程计划 v1.3
@@ -27,7 +27,7 @@ description: |
 - **习惯打卡**：习惯、打卡、早起、阅读、运动
 - **倒数日**：倒数、倒计时、还有多少天
 - **四象限**：四象限、重要紧急、Eisenhower
-- **课表考试**：课表、课程、作业、考试、考试倒计时、复习计划
+- **课表考试**：课表、课程、课表图片、导入课表、识别课表、作业、考试、考试倒计时、复习计划
 - **今日概览**：今天有什么、今日概览、日程
 - **学期管理**：学期、切换学期
 - **Web 界面**：手机看、网页版、打开界面、启动服务
@@ -109,7 +109,9 @@ python start.py 8080       # 指定端口
 | "添加倒数日 XXX" | `python scripts/engine.py countdown add --title "XXX" --date 2026-12-25 --type exam` |
 | "今天有什么课" | `python scripts/engine.py schedule today` |
 | "查看课表" | `python scripts/engine.py schedule show` |
-| "导入课表" | `python scripts/engine.py schedule import <file.json>` |
+| "添加课程" | `python scripts/engine.py schedule add --course "数据库原理" --day 1 --time "08:00-09:40" --teacher "张教授" --location "A301" --weeks "1-16"` |
+| "清空课表" | `python scripts/engine.py schedule clear` |
+| "导入课表文件" | `python scripts/engine.py schedule import <file.json>` |
 | "作业" | `python scripts/engine.py homework list` |
 | "添加作业" | `python scripts/engine.py homework add --course "数学" --title "习题3" --deadline 2026-07-25` |
 | "完成作业" | `python scripts/engine.py homework done <id>` |
@@ -136,6 +138,52 @@ python scripts/engine.py task add \
   --repeat daily              # daily/weekly/monthly/yearly
   --note "备注"               # 备注
   --subtasks "复习笔记|做10道练习"  # 子任务用 | 分隔
+```
+
+### 课表图片识别导入（重点功能）
+
+当用户发课表截图/照片、说"导入课表"、"识别课表"、"课表图片"时：
+
+**AI 直接看图识别**（无需 OCR 库，AI 本身是多模态的），然后批量导入：
+
+```
+步骤1: 看图识别每门课的字段：
+  - course: 课程名（如 "数据库原理"）
+  - day: 星期几（1=周一 ... 7=周日）
+  - time: 时间段（如 "08:00-09:40"）
+  - teacher: 教师（可选）
+  - location: 教室地点（可选）
+  - weeks: 周次（如 "1-16" 或 "3-14"，默认 "1-16"）
+
+步骤2: 先清空旧课表
+  python scripts/engine.py schedule clear
+
+步骤3: 逐条添加识别出的课程
+  python scripts/engine.py schedule add --course "数据库原理" --day 1 --time "08:00-09:40" --teacher "张教授" --location "A301" --weeks "1-16"
+  python scripts/engine.py schedule add --course "英语精读" --day 1 --time "10:00-11:40" --teacher "李老师" --location "外语楼201"
+  ...（每门课一条）
+
+步骤4: 确认导入结果
+  python scripts/engine.py schedule show
+
+步骤5: 告诉用户导入了多少门课，展示课表预览
+```
+
+**识别要点**：
+- 课表图片可能不清晰，识别不确定的字段（如教师名）时标注"待确认"
+- 同一门课一周可能上多次（如周一和周三都有），分别添加
+- 周次不是 1-16 的要特别标注（如 "3-14周" 表示第3-14周）
+- 如果图片是教务系统截图，注意区分"单周/双周"上课的情况
+
+**schedule add 完整参数**：
+```
+python scripts/engine.py schedule add \
+  --course "课程名"       # 必填
+  --day 1                 # 必填 1=周一 2=周二 ... 7=周日
+  --time "08:00-09:40"   # 必填 时间段
+  --teacher "教师名"      # 可选
+  --location "教室"       # 可选
+  --weeks "1-16"          # 可选 默认1-16
 ```
 
 ## 05 / Rules — 必须遵守的判断

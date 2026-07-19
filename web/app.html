@@ -386,8 +386,16 @@ async function renderPlan(){
   const exams=await API.get('/api/exams');
   const hw=await API.get('/api/homework');
   const cd=await API.get('/api/countdowns');
+  const sched=await API.get('/api/schedule');
   const el=document.getElementById('p-plan');
   let h='';
+  // 课表
+  const WD=['周一','周二','周三','周四','周五','周六','周日'];
+  h+=`<div class="card"><div class="card-h">📅 本周课表</div>`;
+  if(!sched.length)h+=`<div class="empty"><div class="e">📭</div>课表为空</div>`;
+  else{for(let d=1;d<=7;d++){const cs=sched.filter(c=>c.day===d).sort((a,b)=>a.time>b.time?1:-1);if(cs.length){h+=`<div style="margin:8px 0 4px;font-weight:600;color:var(--pri);font-size:13px">${WD[d-1]}</div>`;cs.forEach(c=>{h+=`<div class="li"><span>📖</span><div class="info"><div class="t">${c.course}</div><div class="m">${c.time} ${c.location?'· '+c.location:''} ${c.teacher?'· '+c.teacher:''} ${c.weeks&&c.weeks!=='1-16'?'· 第'+c.weeks+'周':''}</div></div></div>`})}}}
+  h+=`<div style="margin-top:10px;padding:10px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--mut);line-height:1.6">📸 <b>课表图片识别导入</b><br>把课表截图发给 AI 助手，说"导入课表"，AI 自动识别每门课并批量导入，无需手动输入。</div>`;
+  h+=`</div>`;
   // 考试倒计时
   h+=`<div class="card"><div class="card-h">⏰ 考试倒计时 <span class="more" onclick="openMask('m-exam')">+ 添加</span></div>`;
   const future=exams.filter(e=>e.days_left>=0);

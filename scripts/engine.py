@@ -534,6 +534,21 @@ def schedule_today():
         print("🎉 今天没有课！")
 
 
+def schedule_add(course, day, time, teacher="", location="", weeks="1-16"):
+    """添加单门课到课表（不覆盖，追加）"""
+    sem = _cs(); data = _r(_sf(sem))
+    data.append({"day": day, "time": time, "course": course,
+                 "teacher": teacher, "location": location, "weeks": weeks})
+    _w(_sf(sem), data)
+    print(f"✅ 已添加: {WEEKDAYS[day-1]} {time} {course} {teacher} @ {location} (第{weeks}周)")
+
+
+def schedule_clear():
+    """清空当前学期课表"""
+    sem = _cs(); _w(_sf(sem), [])
+    print(f"✅ 课表已清空（学期: {sem}）")
+
+
 # ── 作业 ──
 def homework_add(course, title, deadline, note=""):
     sem = _cs(); data = _r(_hf(sem))
@@ -728,7 +743,15 @@ def main():
     # schedule
     scp = sp.add_parser("schedule", help="课表")
     scs = scp.add_subparsers(dest="sub")
-    si = scs.add_parser("import", help="导入课表"); si.add_argument("file")
+    si = scs.add_parser("import", help="导入课表(覆盖)"); si.add_argument("file")
+    sca = scs.add_parser("add", help="添加单门课(追加)")
+    sca.add_argument("--course", required=True, help="课程名")
+    sca.add_argument("--day", type=int, required=True, help="星期几 1=周一 7=周日")
+    sca.add_argument("--time", required=True, help="时间 如 08:00-09:40")
+    sca.add_argument("--teacher", default="", help="教师")
+    sca.add_argument("--location", default="", help="地点")
+    sca.add_argument("--weeks", default="1-16", help="周次 如 1-16")
+    scs.add_parser("clear", help="清空课表")
     scs.add_parser("show", help="查看课表")
     scs.add_parser("today", help="今日课程")
 
@@ -826,6 +849,11 @@ def main():
     elif args.cmd == "schedule":
         if args.sub == "import":
             schedule_import(args.file)
+        elif args.sub == "add":
+            schedule_add(args.course, args.day, args.time,
+                         teacher=args.teacher, location=args.location, weeks=args.weeks)
+        elif args.sub == "clear":
+            schedule_clear()
         elif args.sub == "show":
             schedule_show()
         elif args.sub == "today":

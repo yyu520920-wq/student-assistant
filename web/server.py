@@ -195,12 +195,7 @@ def api_countdown_add(body):
 
 
 def api_schedule():
-    data = _r(_sf(sem())); result = {}
-    for d in range(1, 8):
-        result[WEEKDAYS[d - 1]] = sorted(
-            [c for c in data if c["day"] == d], key=lambda x: x["time"]
-        )
-    return result
+    return _r(_sf(sem()))
 
 
 def api_homework():
