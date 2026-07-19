@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#6366f1">
+<title>大学日程计划</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--pri:#6366f1;--pri-d:#4f46e5;--pri-l:#eef2ff;--bg:#f1f5f9;--card:#fff;--text:#1e293b;--sub:#64748b;--border:#e2e8f0;--red:#ef4444;--green:#10b981;--amber:#f59e0b;--radius:14px;--shadow:0 1px 3px rgba(0,0,0,.08)}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;padding-bottom:64px;max-width:520px;margin:0 auto;position:relative}
+/* 顶部栏 */
+.topbar{background:linear-gradient(135deg,var(--pri),var(--pri-d));color:#fff;padding:16px 18px 14px;position:sticky;top:0;z-index:50}
+.topbar h1{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
+.topbar .sub{font-size:12px;opacity:.85;margin-top:2px}
+/* 底部 Tab */
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.tab{flex:1;text-align:center;padding:8px 0 6px;color:var(--sub);cursor:pointer;transition:.15s}
+.tab .ic{font-size:22px;line-height:1}
+.tab .lb{font-size:11px;margin-top:2px}
+.tab.active{color:var(--pri)}
+.tab.active .ic{transform:scale(1.1)}
+/* 内容区 */
+.page{display:none;padding:14px}
+.page.active{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* 卡片 */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:12px}
+.card-h{font-size:15px;font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.card-h .more{font-size:12px;color:var(--pri);cursor:pointer}
+/* 统计网格 */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+.stat{background:var(--card);border-radius:var(--radius);padding:14px;text-align:center;box-shadow:var(--shadow)}
+.stat .v{font-size:26px;font-weight:800;color:var(--pri)}
+.stat .l{font-size:12px;color:var(--sub);margin-top:2px}
+.stat .i{font-size:20px}
+/* 任务项 */
+.task{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)}
+.task:last-child{border:none}
+.cb{width:22px;height:22px;border:2px solid #cbd5e1;border-radius:50%;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+.cb.on{background:var(--green);border-color:var(--green)}
+.cb.on::after{content:"✓";color:#fff;font-size:13px;font-weight:700}
+.pd{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.p1{background:var(--red)}.p2{background:var(--amber)}.p3{background:var(--green)}
+.ti{flex:1;min-width:0}
+.tt{font-size:14px;word-break:break-word}
+.tt.done{text-decoration:line-through;color:var(--sub)}
+.tm{font-size:11px;color:var(--sub);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tag{font-size:10px;background:var(--pri-l);color:var(--pri);padding:1px 6px;border-radius:4px}
+.due{color:var(--red)}
+.due.soon{color:var(--amber)}
+.del{background:none;border:none;font-size:16px;cursor:pointer;padding:4px;opacity:.4}
+.del:active{opacity:1}
+/* 按钮 */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-pri{background:var(--pri);color:#fff}
+.btn-pri:active{background:var(--pri-d)}
+.btn-sec{background:var(--bg);color:var(--text)}
+.btn-block{width:100%;padding:12px}
+.btn-sm{padding:6px 12px;font-size:12px}
+.fab{position:fixed;bottom:74px;right:18px;width:52px;height:52px;border-radius:50%;background:var(--pri);color:#fff;border:none;font-size:26px;box-shadow:0 4px 12px rgba(99,102,241,.4);cursor:pointer;z-index:90;display:flex;align-items:center;justify-content:center}
+.fab:active{transform:scale(.92)}
+/* 弹窗 */
+.mask{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-end;justify-content:center}
+.mask.on{display:flex}
+.sheet{background:#fff;width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:18px;max-height:88vh;overflow-y:auto;animation:up .25s}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+.sheet h3{font-size:16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.sheet .x{font-size:22px;color:var(--sub);cursor:pointer;background:none;border:none}
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px;font-weight:600}
+.fg input,.fg select,.fg textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;background:#fff}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+.fr{display:flex;gap:10px}.fr .fg{flex:1}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:6px 12px;border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer}
+.chip.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+/* 习惯 */
+.habits{display:grid;grid-template-columns:1fr;gap:10px}
+.hb{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px}
+.hb .hi{font-size:28px}
+.hb .hi2{flex:1}
+.hb .hn{font-size:15px;font-weight:600}
+.hb .hs{font-size:12px;color:var(--sub);margin-top:2px}
+.hb .hc{padding:8px 16px;border-radius:20px;border:2px solid var(--border);background:transparent;font-size:13px;cursor:pointer;font-weight:600}
+.hb .hc.on{background:var(--green);color:#fff;border-color:var(--green)}
+/* 考试进度 */
+.exam{margin-bottom:14px}
+.exam .et{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.exam .en{font-size:15px;font-weight:600}
+.exam .ed{font-size:13px;font-weight:700}
+.exam .bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.exam .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--amber),var(--red));border-radius:4px}
+.exam .meta{font-size:11px;color:var(--sub);margin-top:4px}
+/* 番茄 */
+.pomo{text-align:center;padding:20px}
+.pomo .num{font-size:48px;font-weight:800;color:var(--pri)}
+.pomo .lbl{font-size:13px;color:var(--sub)}
+.pomo-row{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+/* 教程 */
+.tut{counter-reset:step}
+.tut .ts{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:10px;box-shadow:var(--shadow);position:relative;padding-left:50px}
+.tut .ts::before{counter-increment:step;content:counter(step);position:absolute;left:14px;top:14px;width:26px;height:26px;background:var(--pri);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.tut .ts h4{font-size:14px;margin-bottom:4px}
+.tut .ts p{font-size:13px;color:var(--sub);line-height:1.6}
+.tut .ts code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:12px;color:var(--pri-d)}
+/* Toast */
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;z-index:300;opacity:0;transition:.3s;pointer-events:none}
+.toast.on{opacity:1;top:30px}
+/* 空状态 */
+.empty{text-align:center;padding:30px 20px;color:var(--sub);font-size:14px}
+.empty .e{font-size:40px;margin-bottom:8px}
+/* 列表项通用 */
+.li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.li:last-child{border:none}
+.li .info{flex:1;min-width:0}
+.li .t{font-size:14px}
+.li .m{font-size:11px;color:var(--sub);margin-top:2px}
+.badge{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
+.b-red{background:#fee2e2;color:var(--red)}
+.b-amber{background:#fef3c7;color:#92400e}
+.b-green{background:#d1fae5;color:#065f46}
+/* 响应式 */
+@media(min-width:521px){.fab{right:calc(50% - 260px + 18px)}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📚 大学日程计划</h1>
+  <div class="sub" id="topDate"></div>
+</div>
+
+<!-- 今日 -->
+<div class="page active" id="p-today"></div>
+<!-- 任务 -->
+<div class="page" id="p-tasks"></div>
+<!-- 计划 -->
+<div class="page" id="p-plan"></div>
+<!-- 习惯 -->
+<div class="page" id="p-habits"></div>
+<!-- 我的 -->
+<div class="page" id="p-me"></div>
+
+<button class="fab" id="fab" onclick="onFab()">+</button>
+
+<div class="tabbar">
+  <div class="tab active" onclick="go('today')"><div class="ic">📅</div><div class="lb">今日</div></div>
+  <div class="tab" onclick="go('tasks')"><div class="ic">📝</div><div class="lb">任务</div></div>
+  <div class="tab" onclick="go('plan')"><div class="ic">🎯</div><div class="lb">计划</div></div>
+  <div class="tab" onclick="go('habits')"><div class="ic">✅</div><div class="lb">习惯</div></div>
+  <div class="tab" onclick="go('me')"><div class="ic">👤</div><div class="lb">我的</div></div>
+</div>
+
+<!-- 任务弹窗 -->
+<div class="mask" id="m-task">
+  <div class="sheet">
+    <h3><span id="mTaskTitle">添加任务</span><button class="x" onclick="closeMask('m-task')">×</button></h3>
+    <input type="hidden" id="tEditId">
+    <div class="fg"><label>任务标题</label><input id="tTitle" placeholder="如：复习SQL连接查询"></div>
+    <div class="fr">
+      <div class="fg"><label>清单</label><select id="tList"></select></div>
+      <div class="fg"><label>优先级</label><select id="tPri"><option value="2">🟡 中</option><option value="1">🔴 高</option><option value="3">🟢 低</option><option value="0">⚪ 无</option></select></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>截止日期</label><input type="date" id="tDue"></div>
+      <div class="fg"><label>四象限</label><select id="tEis"><option value="">不设置</option><option value="important-urgent">🔥 重要紧急</option><option value="important-not-urgent">⭐ 重要不紧急</option><option value="not-important-urgent">⏰ 不重要紧急</option><option value="not-important-not-urgent">💤 不重要不紧急</option></select></div>
+    </div>
+    <div class="fg"><label>标签（逗号分隔）</label><input id="tTags" placeholder="如：SQL,数据库"></div>
+    <div class="fg"><label>备注</label><textarea id="tNote" rows="2" placeholder="可选"></textarea></div>
+    <div class="fg"><label>子任务（每行一个）</label><textarea id="tSub" rows="2" placeholder="如：复习笔记&#10;做10道练习"></textarea></div>
+    <button class="btn btn-pri btn-block" onclick="saveTask()">保存任务</button>
+  </div>
+</div>
+
+<!-- 习惯弹窗 -->
+<div class="mask" id="m-habit">
+  <div class="sheet">
+    <h3>添加习惯<button class="x" onclick="closeMask('m-habit')">×</button></h3>
+    <div class="fg"><label>习惯名称</label><input id="hName" placeholder="如：早起7点"></div>
+    <div class="fr">
+      <div class="fg"><label>图标</label><input id="hIcon" value="✅" placeholder="emoji"></div>
+      <div class="fg"><label>频率</label><select id="hGoal"><option value="daily">每天</option><option value="weekly_3">每周3次</option><option value="weekly_5">每周5次</option></select></div>
+    </div>
+    <button class="btn btn-pri btn-block" onclick="saveHabit()">保存习惯</button>
+  </div>
+</div>
+
+<!-- 考试弹窗 -->
+<div class="mask" id="m-exam">
+  <div class="sheet">
+    <h3>添加考试<button class="x" onclick="closeMask('m-exam')">×</button></h3>
+    <div class="fg"><label>课程</label><input id="eCourse" placeholder="如：高等数学"></div>
+    <div class="fr">
+      <div class="fg"><label>类型</label><input id="eType" placeholder="如期中/期末"></div>
+      <div class="fg"><label>日期</label><input type="date" id="eDate"></div>
+    </div>
+    <div class="fg"><label>地点</label><input id="eLoc" placeholder="可选"></div>
+    <button class="btn btn-pri btn-block" onclick="saveExam()">保存考试</button>
+  </div>
+</div>
+
+<!-- 作业弹窗 -->
+<div class="mask" id="m-hw">
+  <div class="sheet">
+    <h3>添加作业<button class="x" onclick="closeMask('m-hw')">×</button></h3>
+    <div class="fg"><label>课程</label><input id="hwCourse" placeholder="如：数据库"></div>
+    <div class="fg"><label>作业标题</label><input id="hwTitle" placeholder="如：SQL实验报告3"></div>
+    <div class="fr">
+      <div class="fg"><label>截止日期</label><input type="date" id="hwDeadline"></div>
+    </div>
+    <div class="fg"><label>备注</label><input id="hwNote" placeholder="如：学习通提交"></div>
+    <button class="btn btn-pri btn-block" onclick="saveHw()">保存作业</button>
+  </div>
+</div>
+
+<!-- 倒数日弹窗 -->
+<div class="mask" id="m-cd">
+  <div class="sheet">
+    <h3>添加倒数日<button class="x" onclick="closeMask('m-cd')">×</button></h3>
+    <div class="fg"><label>标题</label><input id="cdTitle" placeholder="如：寒假开始"></div>
+    <div class="fr">
+      <div class="fg"><label>日期</label><input type="date" id="cdDate"></div>
+      <div class="fg"><label>类型</label><select id="cdType"><option value="exam">考试</option><option value="vacation">假期</option><option value="personal">个人</option><option value="other">其他</option></select></div>
+    </div>
+    <button class="btn btn-pri btn-block" onclick="saveCd()">保存</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API={
+  get:async u=>{const r=await fetch(u);return r.json()},
+  post:async(u,d)=>{const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});return r.json()},
+  put:async(u,d)=>{const r=await fetch(u,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});return r.json()},
+  del:async u=>{const r=await fetch(u,{method:'DELETE'});return r.json()}
+};
+let curPage='today',stateData={lists:[],tasks:[]};
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2000)}
+function openMask(id){document.getElementById(id).classList.add('on')}
+function closeMask(id){document.getElementById(id).classList.remove('on')}
+
+function go(page){
+  curPage=page;
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['today','tasks','plan','habits','me'][i]===page));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const map={today:'p-today',tasks:'p-tasks',plan:'p-plan',habits:'p-habits',me:'p-me'};
+  document.getElementById(map[page]).classList.add('active');
+  document.getElementById('fab').style.display=(page==='tasks'||page==='habits'||page==='plan')?'flex':'none';
+  render(page);
+}
+
+function onFab(){
+  if(curPage==='tasks')openTaskModal();
+  else if(curPage==='habits')openMask('m-habit');
+  else if(curPage==='plan')openPlanModal();
+}
+
+async function render(page){
+  if(page==='today')await renderToday();
+  else if(page==='tasks')await renderTasks();
+  else if(page==='plan')await renderPlan();
+  else if(page==='habits')await renderHabits();
+  else if(page==='me')await renderMe();
+}
+
+// ── 今日 ──
+async function renderToday(){
+  const d=await API.get('/api/today');
+  const dash=await API.get('/api/dashboard');
+  const s=dash.stats;
+  document.getElementById('topDate').textContent=`${d.date} ${d.weekday}`;
+  const el=document.getElementById('p-today');
+  let h='';
+  h+=`<div class="stats">
+    <div class="stat"><div class="i">📋</div><div class="v">${s.pending_tasks}</div><div class="l">待办任务</div></div>
+    <div class="stat"><div class="i">🔥</div><div class="v">${s.urgent_count}</div><div class="l">紧急任务</div></div>
+    <div class="stat"><div class="i">🍅</div><div class="v">${s.today_pomodoro}</div><div class="l">今日番茄</div></div>
+    <div class="stat"><div class="i">⭐</div><div class="v">${s.habit_streaks}</div><div class="l">习惯连续</div></div>
+  </div>`;
+  // 今日课程
+  h+=`<div class="card"><div class="card-h">📅 今日课程 <span style="font-size:12px;color:var(--sub)">${d.courses.length}节</span></div>`;
+  if(d.courses.length===0)h+=`<div class="empty"><div class="e">🎉</div>今天没有课</div>`;
+  else d.courses.forEach(c=>{h+=`<div class="li"><span>📖</span><div class="info"><div class="t">${c.course}</div><div class="m">${c.time} · ${c.location||''} · ${c.teacher||''}</div></div></div>`});
+  h+=`</div>`;
+  // 今日任务
+  h+=`<div class="card"><div class="card-h">📝 今日任务 <span class="more" onclick="go('tasks')">全部 →</span></div>`;
+  if(d.tasks.length===0)h+=`<div class="empty"><div class="e">✅</div>暂无今日任务</div>`;
+  else d.tasks.forEach(t=>{h+=`<div class="task"><div class="cb" onclick="doneTask('${t.id}')"></div><div class="pd p${t.priority||2}"></div><div class="ti"><div class="tt">${t.title}</div><div class="tm">${(t.tags||[]).map(g=>`<span class="tag">#${g}</span>`).join('')}</div></div></div>`});
+  h+=`</div>`;
+  // 习惯快速打卡
+  h+=`<div class="card"><div class="card-h">✅ 习惯打卡 <span class="more" onclick="go('habits')">全部 →</span></div>`;
+  const today=d.date;
+  d.habits.forEach(hb=>{const done=(hb.logs||[]).includes(today);h+=`<div class="hb"><div class="hi">${hb.icon||'✅'}</div><div class="hi2"><div class="hn">${hb.name}</div><div class="hs">🔥 ${hb.streak}天连续</div></div><button class="hc ${done?'on':''}" ${done?'disabled':''} onclick="checkin('${hb.id}')">${done?'✅ 已打卡':'打卡'}</button></div>`});
+  h+=`</div>`;
+  // 临近考试+作业
+  if(d.near_exams.length||d.homework.length){
+    h+=`<div class="card"><div class="card-h">⏰ 临近事项</div>`;
+    d.near_exams.forEach(e=>{const dl=e.days_left;h+=`<div class="li"><span>${dl<=3?'🔴':'🟡'}</span><div class="info"><div class="t">${e.course} ${e.type}</div><div class="m">${e.date} · 剩${dl}天</div></div><span class="badge ${dl<=3?'b-red':'b-amber'}">${dl}天</span></div>`});
+    d.homework.forEach(hw=>{const dl=hw.days_left;h+=`<div class="li"><span>📝</span><div class="info"><div class="t">${hw.course}: ${hw.title}</div><div class="m">截止 ${hw.deadline} · 剩${dl}天</div></div><span class="badge ${dl<=1?'b-red':dl<=3?'b-amber':'b-green'}">${dl}天</span></div>`});
+    h+=`</div>`;
+  }
+  el.innerHTML=h;
+}
+
+// ── 任务 ──
+async function renderTasks(){
+  stateData.lists=await API.get('/api/lists');
+  stateData.tasks=await API.get('/api/tasks');
+  const el=document.getElementById('p-tasks');
+  let h='';
+  // 筛选
+  h+=`<div class="chips" style="margin-bottom:12px"><div class="chip on" onclick="filterTask('')">全部</div>`;
+  stateData.lists.forEach(l=>{h+=`<div class="chip" onclick="filterTask('${l.id}')">${l.icon} ${l.name}</div>`});
+  h+=`</div>`;
+  h+=`<div id="taskList">${taskListHtml(stateData.tasks)}</div>`;
+  el.innerHTML=h;
+}
+function taskListHtml(tasks){
+  if(!tasks.length)return`<div class="empty"><div class="e">📭</div>暂无任务<br><span style="font-size:12px">点右下角 + 添加</span></div>`;
+  return tasks.map(t=>{
+    const eis={'important-urgent':'🔥','important-not-urgent':'⭐','not-important-urgent':'⏰','not-important-not-urgent':'💤'}[t.eisenhower]||'';
+    const sub=t.subtasks&&t.subtasks.length?`<div class="tm">📋 ${t.subtasks.filter(s=>s.done).length}/${t.subtasks.length} 子任务</div>`:'';
+    return`<div class="task"><div class="cb ${t.done?'on':''}" onclick="doneTask('${t.id}')"></div><div class="pd p${t.priority||2}"></div><div class="ti"><div class="tt ${t.done?'done':''}">${t.title}</div><div class="tm">${t.due_date?`<span class="due">📅${t.due_date}</span>`:''} ${eis} ${(t.tags||[]).map(g=>`<span class="tag">#${g}</span>`).join('')}</div>${sub}</div><button class="del" onclick="delTask('${t.id}')">🗑️</button></div>`;
+  }).join('');
+}
+async function filterTask(listId){
+  const url=listId?`/api/tasks?list_id=${listId}`:'/api/tasks';
+  const tasks=await API.get(url);
+  document.getElementById('taskList').innerHTML=taskListHtml(tasks);
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  event.target.classList.add('on');
+}
+function openTaskModal(){
+  document.getElementById('tEditId').value='';
+  document.getElementById('mTaskTitle').textContent='添加任务';
+  document.getElementById('tTitle').value='';
+  document.getElementById('tDue').value='';
+  document.getElementById('tEis').value='';
+  document.getElementById('tTags').value='';
+  document.getElementById('tNote').value='';
+  document.getElementById('tSub').value='';
+  const sel=document.getElementById('tList');
+  sel.innerHTML=stateData.lists.map(l=>`<option value="${l.id}">${l.icon} ${l.name}</option>`).join('');
+  openMask('m-task');
+}
+async function saveTask(){
+  const id=document.getElementById('tEditId').value;
+  const title=document.getElementById('tTitle').value.trim();
+  if(!title){toast('请输入标题');return}
+  const sub=document.getElementById('tSub').value.split('\n').map(s=>s.trim()).filter(Boolean).map(s=>({title:s,done:false}));
+  const data={title,list_id:document.getElementById('tList').value,priority:parseInt(document.getElementById('tPri').value),due_date:document.getElementById('tDue').value||null,eisenhower:document.getElementById('tEis').value||null,tags:document.getElementById('tTags').value.split(',').map(s=>s.trim()).filter(Boolean),note:document.getElementById('tNote').value,subtasks:sub};
+  if(id)await API.put(`/api/tasks/${id}`,data);
+  else await API.post('/api/tasks',data);
+  closeMask('m-task');toast(id?'✅ 已更新':'✅ 已添加');render('tasks');
+}
+async function doneTask(tid){await API.post(`/api/tasks/${tid}/done`);toast('✅ 完成！');render(curPage)}
+async function delTask(tid){if(!confirm('删除此任务？'))return;await API.del(`/api/tasks/${tid}`);toast('🗑️ 已删除');render('tasks')}
+
+// ── 计划（复习计划）──
+async function renderPlan(){
+  const exams=await API.get('/api/exams');
+  const hw=await API.get('/api/homework');
+  const cd=await API.get('/api/countdowns');
+  const el=document.getElementById('p-plan');
+  let h='';
+  // 考试倒计时
+  h+=`<div class="card"><div class="card-h">⏰ 考试倒计时 <span class="more" onclick="openMask('m-exam')">+ 添加</span></div>`;
+  const future=exams.filter(e=>e.days_left>=0);
+  if(!future.length)h+=`<div class="empty"><div class="e">📭</div>暂无考试</div>`;
+  else future.forEach(e=>{
+    const pct=Math.max(5,Math.min(100,100-e.days_left*2));
+    h+=`<div class="exam"><div class="et"><div class="en">${e.course} ${e.type}</div><div class="ed" style="color:${e.days_left<=3?'var(--red)':e.days_left<=7?'var(--amber)':'var(--pri)'}">剩${e.days_left}天</div></div><div class="bar"><i style="width:${pct}%"></i></div><div class="meta">📅 ${e.date} · 📍 ${e.location||'待定'} ${e.note?'· '+e.note:''}</div></div>`;
+  });
+  h+=`</div>`;
+  // 作业
+  h+=`<div class="card"><div class="card-h">📝 作业 <span class="more" onclick="openMask('m-hw')">+ 添加</span></div>`;
+  const pendingHw=hw.filter(x=>!x.done);
+  if(!pendingHw.length)h+=`<div class="empty"><div class="e">🎉</div>作业都做完啦</div>`;
+  else pendingHw.forEach(x=>{const dl=x.days_left;h+=`<div class="li"><span>📝</span><div class="info"><div class="t">${x.course}: ${x.title}</div><div class="m">截止 ${x.deadline} · 剩${dl}天 ${x.note?'· '+x.note:''}</div></div><button class="btn btn-sm btn-sec" onclick="doneHw(${x.id})">完成</button></div>`});
+  h+=`</div>`;
+  // 倒数日
+  h+=`<div class="card"><div class="card-h">🎯 倒数日 <span class="more" onclick="openMask('m-cd')">+ 添加</span></div>`;
+  if(!cd.length)h+=`<div class="empty"><div class="e">📭</div>暂无倒数日</div>`;
+  else cd.forEach(c=>{const ic=c.days<0?'⚫':c.days<=7?'🔴':c.days<=30?'🟡':'🟢';const st=c.days<0?`已过${-c.days}天`:c.days===0?'就是今天！':`还有${c.days}天`;h+=`<div class="li"><span>${ic}</span><div class="info"><div class="t">${c.title}</div><div class="m">${c.date} · ${st}</div></div></div>`});
+  h+=`</div>`;
+  el.innerHTML=h;
+}
+function openPlanModal(){openMask('m-exam')}
+async function saveExam(){const c=document.getElementById('eCourse').value.trim();if(!c){toast('请输入课程');return}await API.post('/api/exams',{course:c,type:document.getElementById('eType').value,date:document.getElementById('eDate').value,location:document.getElementById('eLoc').value});closeMask('m-exam');toast('✅ 考试已添加');render('plan')}
+async function saveHw(){const c=document.getElementById('hwCourse').value.trim();const t=document.getElementById('hwTitle').value.trim();if(!c||!t){toast('请填课程和标题');return}await API.post('/api/homework',{course:c,title:t,deadline:document.getElementById('hwDeadline').value,note:document.getElementById('hwNote').value});closeMask('m-hw');toast('✅ 作业已添加');render('plan')}
+async function saveCd(){const t=document.getElementById('cdTitle').value.trim();if(!t){toast('请输入标题');return}await API.post('/api/countdowns',{title:t,date:document.getElementById('cdDate').value,type:document.getElementById('cdType').value});closeMask('m-cd');toast('✅ 已添加');render('plan')}
+async function doneHw(id){await API.post(`/api/homework/${id}/done`);toast('✅ 作业完成');render('plan')}
+
+// ── 习惯 ──
+async function renderHabits(){
+  const habits=await API.get('/api/habits');
+  const today=new Date().toISOString().split('T')[0];
+  const el=document.getElementById('p-habits');
+  let h='<div class="habits">';
+  if(!habits.length)h+=`<div class="empty"><div class="e">📭</div>暂无习惯<br><span style="font-size:12px">点右下角 + 添加</span></div>`;
+  else habits.forEach(hb=>{const done=(hb.logs||[]).includes(today);h+=`<div class="hb"><div class="hi">${hb.icon||'✅'}</div><div class="hi2"><div class="hn">${hb.name}</div><div class="hs">🔥 ${hb.streak}天连续 · 总计${hb.total}次 · ${hb.goal==='daily'?'每天':hb.goal}</div></div><button class="hc ${done?'on':''}" ${done?'disabled':''} onclick="checkin('${hb.id}')">${done?'✅ 已打卡':'打卡'}</button></div>`});
+  h+='</div>';
+  el.innerHTML=h;
+}
+async function checkin(hid){await API.post(`/api/habits/${hid}/checkin`);toast('✅ 打卡成功！');render(curPage)}
+async function saveHabit(){const n=document.getElementById('hName').value.trim();if(!n){toast('请输入名称');return}await API.post('/api/habits',{name:n,icon:document.getElementById('hIcon').value||'✅',goal:document.getElementById('hGoal').value});closeMask('m-habit');toast('✅ 习惯已创建');render('habits')}
+
+// ── 我的 ──
+async function renderMe(){
+  const pomo=await API.get('/api/pomodoro');
+  const dash=await API.get('/api/dashboard');
+  const sems=await API.get('/api/semesters');
+  const s=dash.stats;
+  const el=document.getElementById('p-me');
+  let h='';
+  // 番茄
+  h+=`<div class="card"><div class="card-h">🍅 番茄专注</div><div class="pomo"><div class="num">${pomo.today_count}</div><div class="lbl">今日番茄数</div></div><div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap"><button class="btn btn-pri btn-sm" onclick="logPomo(25)">🍅 记录25分钟</button><button class="btn btn-sec btn-sm" onclick="logPomo(45)">记录45分钟</button><button class="btn btn-sec btn-sm" onclick="logPomo(15)">记录15分钟</button></div><div style="text-align:center;margin-top:10px;font-size:12px;color:var(--sub)">总计 ${pomo.count}次 · ${pomo.total}分钟</div></div>`;
+  // 数据概览
+  h+=`<div class="card"><div class="card-h">📊 数据概览</div><div class="stats" style="margin:0"><div class="stat" style="box-shadow:none;background:var(--bg)"><div class="v">${s.total_tasks}</div><div class="l">总任务</div></div><div class="stat" style="box-shadow:none;background:var(--bg)"><div class="v">${s.done_tasks}</div><div class="l">已完成</div></div></div></div>`;
+  // 近7天趋势
+  h+=`<div class="card"><div class="card-h">📈 近7天</div>`;
+  const maxP=Math.max(...dash.trend.map(t=>t.pomodoro),1);
+  dash.trend.forEach(t=>{const h2=Math.round(t.pomodoro/maxP*100);const dt=t.date.slice(5);h+=`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><span style="font-size:11px;color:var(--sub);width:36px">${dt}</span><div style="flex:1;height:18px;background:var(--bg);border-radius:4px;overflow:hidden"><div style="height:100%;width:${h2}%;background:var(--pri);border-radius:4px"></div></div><span style="font-size:11px;color:var(--sub);width:40px">${t.pomodoro}分</span></div>`});
+  h+=`</div>`;
+  // 学期
+  h+=`<div class="card"><div class="card-h">📚 学期</div>`;
+  sems.forEach(sm=>{h+=`<div class="li"><span>${sm.current?'👉':'📚'}</span><div class="info"><div class="t">${sm.name}</div><div class="m">${sm.current?'当前学期':'点击切换'}</div></div>${sm.current?'':`<button class="btn btn-sm btn-sec" onclick="switchSem('${sm.name}')">切换</button>`}</div>`});
+  h+=`</div>`;
+  // 导出
+  h+=`<div class="card"><div class="card-h">📦 数据导出</div><button class="btn btn-sec btn-block" onclick="exportData()">导出全部数据为 JSON</button></div>`;
+  // 教程
+  h+=`<div class="card"><div class="card-h">📖 使用教程</div><div class="tut">
+    <div class="ts"><h4>第一步：初始化</h4><p>在电脑上运行 <code>python start.py</code>，自动创建示例数据并启动服务。</p></div>
+    <div class="ts"><h4>第二步：手机访问</h4><p>电脑和手机连同一个 WiFi，用手机浏览器打开终端显示的 📱 手机访问地址（如 <code>http://192.168.1.100:5000</code>）。</p></div>
+    <div class="ts"><h4>第三步：添加任务</h4><p>点底部「任务」标签 → 右下角「+」按钮 → 填写标题、截止日期、优先级 → 保存。</p></div>
+    <div class="ts"><h4>第四步：制定复习计划</h4><p>点底部「计划」标签 → 添加考试日期和作业截止日 → 系统自动计算倒计时和进度条。</p></div>
+    <div class="ts"><h4>第五步：习惯打卡</h4><p>点底部「习惯」标签 → 每天点「打卡」按钮 → 自动统计连续天数。</p></div>
+    <div class="ts"><h4>第六步：番茄专注</h4><p>在「我的」页面点「记录25分钟」 → 学完一个番茄钟后记录，统计专注时长。</p></div>
+    <div class="ts"><h4>四象限怎么用</h4><p>添加任务时选四象限：🔥重要紧急（立即做）、⭐重要不紧急（计划做）、⏰不重要紧急（委托）、💤不重要不紧急（少做）。</p></div>
+    <div class="ts"><h4>数据存在哪</h4><p>所有数据存在电脑的 <code>~/.student-assistant/</code> 目录，纯本地存储，隐私安全。换电脑时导出 JSON 即可迁移。</p></div>
+  </div></div>`;
+  el.innerHTML=h;
+}
+async function logPomo(d){await API.post('/api/pomodoro',{duration:d});toast(`🍅 已记录${d}分钟`);render('me')}
+function exportData(){window.open('/api/export')}
+async function switchSem(name){await API.post('/api/semesters/switch',{name});toast('✅ 已切换学期');render('me')}
+
+// 启动
+render('today');
+</script>
+</body>
+</html>
