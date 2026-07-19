@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#6366f1">
+<title>Campus Buddy - 大学生全能成长平台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#f1f5f9;--card:#fff;--text:#1e293b;--sub:#64748b;--border:#e2e8f0;--radius:16px;--shadow:0 2px 8px rgba(0,0,0,.06)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;max-width:560px;margin:0 auto;min-height:100vh}
+/* 顶部 Hero */
+.hero{background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);color:#fff;padding:36px 20px 32px;text-align:center;border-radius:0 0 28px 28px}
+.hero .logo{font-size:48px;line-height:1;margin-bottom:8px}
+.hero h1{font-size:24px;font-weight:800;letter-spacing:-.5px}
+.hero .tagline{font-size:13px;opacity:.85;margin-top:6px;font-weight:500}
+.hero .ver{display:inline-block;margin-top:12px;background:rgba(255,255,255,.2);padding:3px 12px;border-radius:20px;font-size:11px;font-weight:600}
+/* 模块卡片 */
+.modules{padding:20px 16px}
+.section-title{font-size:14px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;padding:0 4px}
+.mod-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s;display:flex;align-items:stretch}
+.mod-card:active{transform:scale(.98)}
+.mod-card.disabled{cursor:default;opacity:.65}
+.mod-card.disabled:active{transform:none}
+.mod-icon{width:64px;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0}
+.mod-body{flex:1;padding:14px 14px 14px 0}
+.mod-body .name{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.mod-body .name .v{font-size:10px;background:#f1f5f9;color:var(--sub);padding:2px 7px;border-radius:10px;font-weight:600}
+.mod-body .desc{font-size:12px;color:var(--sub);margin-top:4px;line-height:1.5}
+.mod-body .features{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.mod-body .features span{font-size:10px;background:#f8fafc;border:1px solid var(--border);padding:2px 8px;border-radius:10px;color:var(--sub)}
+.mod-arrow{display:flex;align-items:center;padding-right:16px;color:var(--sub);font-size:18px}
+.mod-card.disabled .mod-arrow{display:none}
+.status-tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap}
+.status-done{background:#dcfce7;color:#16a34a}
+.status-soon{background:#fef3c7;color:#d97706}
+/* 底部 */
+.footer{text-align:center;padding:24px 16px 32px;color:var(--sub);font-size:11px;line-height:1.6}
+.footer a{color:#6366f1;text-decoration:none}
+/* 主题色条 */
+.mod-icon.c1{background:linear-gradient(135deg,#eef2ff,#e0e7ff)}
+.mod-icon.c2{background:linear-gradient(135deg,#f5f3ff,#ede9fe)}
+.mod-icon.c3{background:linear-gradient(135deg,#ecfdf5,#d1fae5)}
+.mod-icon.c4{background:linear-gradient(135deg,#fffbeb,#fef3c7)}
+.mod-icon.c5{background:linear-gradient(135deg,#fef2f2,#fee2e2)}
+/* PC端 */
+@media(min-width:900px){.modules{max-width:800px;margin:0 auto}.mod-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.mod-card{margin-bottom:0}}
+@media(min-width:1200px){.mod-grid{grid-template-columns:1fr 1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="logo">🎓</div>
+  <h1>Campus Buddy</h1>
+  <div class="tagline">大学生全能成长平台 · 从学业到求职的一站式工具</div>
+  <div class="ver">v1.3 · 模块化架构</div>
+</div>
+
+<div class="modules">
+  <div class="section-title">功能模块</div>
+  <div class="mod-grid">
+
+    <!-- 学业模块 -->
+    <div class="mod-card" onclick="location.href='/m/academic'">
+      <div class="mod-icon c1">📅</div>
+      <div class="mod-body">
+        <div class="name">学业模块 <span class="v">v1.0</span> <span class="status-tag status-done">已完成</span></div>
+        <div class="desc">课表管理、作业追踪、考试倒计时，学业安排一目了然</div>
+        <div class="features"><span>课表导入</span><span>作业截止</span><span>考试倒计时</span><span>四象限</span><span>番茄钟</span></div>
+      </div>
+      <div class="mod-arrow">›</div>
+    </div>
+
+    <!-- 学术模块 -->
+    <div class="mod-card" onclick="location.href='/m/scholar'">
+      <div class="mod-icon c2">📝</div>
+      <div class="mod-body">
+        <div class="name">学术模块 <span class="v">v1.1</span> <span class="status-tag status-done">已完成</span></div>
+        <div class="desc">文献格式转换、论文大纲生成、查重预检，学术写作好帮手</div>
+        <div class="features"><span>文献格式转换</span><span>论文大纲</span><span>查重预检</span></div>
+      </div>
+      <div class="mod-arrow">›</div>
+    </div>
+
+    <!-- 编程模块 -->
+    <div class="mod-card disabled">
+      <div class="mod-icon c3">💻</div>
+      <div class="mod-body">
+        <div class="name">编程模块 <span class="v">v1.2</span> <span class="status-tag status-soon">即将上线</span></div>
+        <div class="desc">代码片段库、Bug 诊断、项目模板生成</div>
+        <div class="features"><span>代码片段库</span><span>Bug 诊断</span><span>项目模板</span></div>
+      </div>
+    </div>
+
+    <!-- 求职模块 -->
+    <div class="mod-card disabled">
+      <div class="mod-icon c4">🎯</div>
+      <div class="mod-body">
+        <div class="name">求职模块 <span class="v">v1.3</span> <span class="status-tag status-soon">即将上线</span></div>
+        <div class="desc">简历关键词优化、面试模拟、作品集展示</div>
+        <div class="features"><span>简历优化</span><span>面试模拟</span><span>作品集</span></div>
+      </div>
+    </div>
+
+    <!-- AI 工具箱 -->
+    <div class="mod-card disabled">
+      <div class="mod-icon c5">🤖</div>
+      <div class="mod-body">
+        <div class="name">AI 工具箱 <span class="v">v2.0</span> <span class="status-tag status-soon">即将上线</span></div>
+        <div class="desc">Prompt 模板库、多模型切换、自动化工作流</div>
+        <div class="features"><span>Prompt 库</span><span>多模型</span><span>自动化</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <div>Campus Buddy · 大学生全能成长平台</div>
+  <div style="margin-top:4px">零依赖 · 手机电脑都能用 · <a href="https://github.com/yyu520920-wq/student-assistant">GitHub</a></div>
+</div>
+
+</body>
+</html>

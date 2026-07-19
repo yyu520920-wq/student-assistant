@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f59e0b">
+<title>求职模块 - Campus Buddy</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--pri:#f59e0b;--pri-d:#d97706;--bg:#f1f5f9;--card:#fff;--text:#1e293b;--sub:#64748b;--border:#e2e8f0;--radius:14px;--shadow:0 1px 3px rgba(0,0,0,.08)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);max-width:560px;margin:0 auto;min-height:100vh}
+.topbar{background:linear-gradient(135deg,var(--pri),var(--pri-d));color:#fff;padding:16px 18px 14px;position:sticky;top:0;z-index:50}
+.topbar-row{display:flex;align-items:center;gap:10px}
+.back-btn{color:#fff;font-size:26px;text-decoration:none;width:28px;flex-shrink:0;opacity:.9;font-weight:300}
+.topbar h1{font-size:18px;font-weight:700}
+.topbar .sub{font-size:12px;opacity:.85;margin-top:2px}
+.coming{padding:60px 20px;text-align:center}
+.coming .icon{font-size:64px;margin-bottom:16px}
+.coming h2{font-size:20px;font-weight:700;margin-bottom:8px}
+.coming .tag{display:inline-block;background:#fef3c7;color:#d97706;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:20px}
+.coming p{font-size:14px;color:var(--sub);line-height:1.6;max-width:320px;margin:0 auto 24px}
+.features{display:grid;gap:12px;padding:0 16px 30px}
+.feat-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;display:flex;gap:12px;align-items:flex-start}
+.feat-card .ic{font-size:28px;flex-shrink:0}
+.feat-card .body .name{font-size:14px;font-weight:700}
+.feat-card .body .desc{font-size:12px;color:var(--sub);margin-top:4px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-row"><a href="/" class="back-btn">‹</a><h1>🎯 求职模块</h1></div>
+  <div class="sub">简历优化 · 面试模拟 · 作品集</div>
+</div>
+<div class="coming">
+  <div class="icon">🎯</div>
+  <h2>求职模块</h2>
+  <div class="tag">即将上线 v1.3</div>
+  <p>简历关键词优化帮你匹配岗位需求，面试模拟提供常见问题练习，作品集展示生成在线作品页面。正在开发中...</p>
+</div>
+<div class="features">
+  <div class="feat-card"><div class="ic">📄</div><div class="body"><div class="name">简历关键词优化</div><div class="desc">粘贴JD和简历，自动分析关键词匹配度，给出优化建议</div></div></div>
+  <div class="feat-card"><div class="ic">🎤</div><div class="body"><div class="name">面试模拟</div><div class="desc">按岗位/方向分类的面试题库，AI 模拟面试问答练习</div></div></div>
+  <div class="feat-card"><div class="ic">🎨</div><div class="body"><div class="name">作品集展示</div><div class="desc">输入项目信息，生成可分享的 HTML 作品集页面</div></div></div>
+</div>
+</body>
+</html>

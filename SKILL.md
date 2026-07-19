@@ -1,11 +1,12 @@
 ---
 name: student-assistant
 description: |
-  大学日程计划 v1.3 — 大学生全能助手，原创设计的学习效率与日程管理工具。非交互式参数驱动，AI 可直接调用。
-  任务管理、子任务、优先级、标签、清单分类、四象限、番茄专注、习惯打卡、
+  大学日程计划 v1.3 — Campus Buddy 大学生全能成长平台，原创设计。非交互式参数驱动，AI 可直接调用。
+  学业模块：任务管理、子任务、优先级、标签、清单分类、四象限、番茄专注、习惯打卡、
   倒数日、智能过滤器、今日概览、课表、作业、考试、多学期管理、数据导出。
-  支持移动端 Web UI（零依赖，手机直连查看和编辑计划）。
-  触发词：任务 | 清单 | 番茄 | 习惯 | 打卡 | 倒数日 | 四象限 | 课表 | 课表图片 | 导入课表 | 识别课表 | 作业 | 考试 | 今日概览 | 学期 | 复习计划 | 日程
+  学术模块：文献管理（GB/T 7714/APA/MLA 三格式互转）、论文大纲生成（综述/实证/案例/实验）、查重预检。
+  支持模块化 Web UI（零依赖，导航首页+独立模块界面，手机直连访问）。
+  触发词：任务 | 清单 | 番茄 | 习惯 | 打卡 | 倒数日 | 四象限 | 课表 | 课表图片 | 导入课表 | 作业 | 考试 | 今日概览 | 学期 | 复习计划 | 文献 | 引用格式 | APA | MLA | 论文大纲 | 查重 | 相似度 | 日程
 ---
 
 # 📚 大学日程计划 v1.3
@@ -28,6 +29,7 @@ description: |
 - **倒数日**：倒数、倒计时、还有多少天
 - **四象限**：四象限、重要紧急、Eisenhower
 - **课表考试**：课表、课程、课表图片、导入课表、识别课表、作业、考试、考试倒计时、复习计划
+- **学术模块**：文献、引用格式、参考文献、GB/T 7714、APA、MLA、论文大纲、论文结构、查重、相似度检测
 - **今日概览**：今天有什么、今日概览、日程
 - **学期管理**：学期、切换学期
 - **Web 界面**：手机看、网页版、打开界面、启动服务
@@ -124,6 +126,14 @@ python start.py 8080       # 指定端口
 | "新建学期" | `python scripts/engine.py semester new "大三上"` |
 | "学期列表" | `python scripts/engine.py semester list` |
 | "启动网页版" / "手机看" | `python start.py` |
+| **学术模块** | |
+| "添加文献" | `python scripts/engine.py ref add --title "标题" --authors "作者1,作者2" --type journal --journal "期刊" --year 2024 --volume 47 --issue 3 --pages 512-528 --tags AI,医学` |
+| "查看文献" | `python scripts/engine.py ref list` |
+| "生成引用" | `python scripts/engine.py ref cite ref001 --format gbt` |
+| "删除文献" | `python scripts/engine.py ref delete ref001` |
+| "论文大纲" | `python scripts/engine.py outline generate --topic "论文主题" --type review` |
+| "大纲列表" | `python scripts/engine.py outline list` |
+| "查重预检" | `python scripts/engine.py plagiarism --text1 "原文" --text2 "待检测" --n 3` |
 
 ### task add 完整参数
 
@@ -185,6 +195,42 @@ python scripts/engine.py schedule add \
   --location "教室"       # 可选
   --weeks "1-16"          # 可选 默认1-16
 ```
+
+### 学术模块 — 文献管理 & 论文大纲 & 查重
+
+**文献格式转换**：支持 GB/T 7714（国标）、APA、MLA 三种格式互转
+```
+python scripts/engine.py ref add \
+  --title "论文标题"           # 必填
+  --authors "作者1,作者2"      # 必填 逗号分隔
+  --type journal               # journal=期刊 conference=会议 book=图书 thesis=学位论文
+  --journal "期刊名"           # 期刊/会议名
+  --year 2024                  # 年份
+  --volume 47                  # 卷
+  --issue 3                    # 期
+  --pages 512-528              # 页码
+  --tags AI,医学               # 标签 逗号分隔
+```
+
+**论文大纲生成**：4种模板（review=文献综述 / empirical=实证研究 / case=案例研究 / experiment=实验研究）
+```
+python scripts/engine.py outline generate --topic "论文主题" --type review
+```
+
+**查重预检**：n-gram + Jaccard 相似度检测（本地算法，非学术查重系统）
+```
+python scripts/engine.py plagiarism --text1 "原文" --text2 "待检测文本" --n 3
+```
+
+### 模块化 Web UI
+
+启动后 `http://localhost:5000` 显示导航首页，5个模块卡片：
+- `/` → 导航首页（Campus Buddy）
+- `/m/academic` → 学业模块（任务/课表/考试/习惯/番茄）
+- `/m/scholar` → 学术模块（文献/大纲/查重）
+- `/m/coding` → 编程模块（即将上线）
+- `/m/career` → 求职模块（即将上线）
+- `/m/ai` → AI 工具箱（即将上线）
 
 ## 05 / Rules — 必须遵守的判断
 

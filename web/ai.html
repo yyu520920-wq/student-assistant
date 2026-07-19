@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#ef4444">
+<title>AI 工具箱 - Campus Buddy</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--pri:#ef4444;--pri-d:#dc2626;--bg:#f1f5f9;--card:#fff;--text:#1e293b;--sub:#64748b;--border:#e2e8f0;--radius:14px;--shadow:0 1px 3px rgba(0,0,0,.08)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);max-width:560px;margin:0 auto;min-height:100vh}
+.topbar{background:linear-gradient(135deg,var(--pri),var(--pri-d));color:#fff;padding:16px 18px 14px;position:sticky;top:0;z-index:50}
+.topbar-row{display:flex;align-items:center;gap:10px}
+.back-btn{color:#fff;font-size:26px;text-decoration:none;width:28px;flex-shrink:0;opacity:.9;font-weight:300}
+.topbar h1{font-size:18px;font-weight:700}
+.topbar .sub{font-size:12px;opacity:.85;margin-top:2px}
+.coming{padding:60px 20px;text-align:center}
+.coming .icon{font-size:64px;margin-bottom:16px}
+.coming h2{font-size:20px;font-weight:700;margin-bottom:8px}
+.coming .tag{display:inline-block;background:#fee2e2;color:#dc2626;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:20px}
+.coming p{font-size:14px;color:var(--sub);line-height:1.6;max-width:320px;margin:0 auto 24px}
+.features{display:grid;gap:12px;padding:0 16px 30px}
+.feat-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;display:flex;gap:12px;align-items:flex-start}
+.feat-card .ic{font-size:28px;flex-shrink:0}
+.feat-card .body .name{font-size:14px;font-weight:700}
+.feat-card .body .desc{font-size:12px;color:var(--sub);margin-top:4px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-row"><a href="/" class="back-btn">‹</a><h1>🤖 AI 工具箱</h1></div>
+  <div class="sub">Prompt 模板 · 多模型 · 自动化</div>
+</div>
+<div class="coming">
+  <div class="icon">🤖</div>
+  <h2>AI 工具箱</h2>
+  <div class="tag">即将上线 v2.0</div>
+  <p>Prompt 模板库收录高质量提示词，多模型切换支持对比不同 AI 输出，自动化工作流串联重复任务。正在规划中...</p>
+</div>
+<div class="features">
+  <div class="feat-card"><div class="ic">💬</div><div class="body"><div class="name">Prompt 模板库</div><div class="desc">按场景分类的提示词模板，一键复制使用，支持自定义收藏</div></div></div>
+  <div class="feat-card"><div class="ic">🔄</div><div class="body"><div class="name">多模型切换</div><div class="desc">同一问题对比不同 AI 模型的输出，选最佳结果</div></div></div>
+  <div class="feat-card"><div class="ic">⚙️</div><div class="body"><div class="name">自动化工作流</div><div class="desc">串联多个步骤，一键完成复杂任务流程</div></div></div>
+</div>
+</body>
+</html>

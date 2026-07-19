@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#8b5cf6">
+<title>学术模块 - Campus Buddy</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--pri:#8b5cf6;--pri-d:#7c3aed;--pri-l:#f5f3ff;--bg:#f1f5f9;--card:#fff;--text:#1e293b;--sub:#64748b;--border:#e2e8f0;--red:#ef4444;--green:#10b981;--amber:#f59e0b;--radius:14px;--shadow:0 1px 3px rgba(0,0,0,.08)}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antiased;padding-bottom:64px;max-width:560px;margin:0 auto;position:relative}
+.topbar{background:linear-gradient(135deg,var(--pri),var(--pri-d));color:#fff;padding:16px 18px 14px;position:sticky;top:0;z-index:50}
+.topbar-row{display:flex;align-items:center;gap:10px}
+.back-btn{color:#fff;font-size:26px;text-decoration:none;line-height:1;width:28px;flex-shrink:0;opacity:.9;font-weight:300}
+.back-btn:active{opacity:.6}
+.topbar h1{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
+.topbar .sub{font-size:12px;opacity:.85;margin-top:2px}
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.tab{flex:1;text-align:center;padding:8px 0 6px;color:var(--sub);cursor:pointer;transition:.15s}
+.tab .ic{font-size:22px;line-height:1}
+.tab .lb{font-size:11px;margin-top:2px}
+.tab.active{color:var(--pri)}
+.tab.active .ic{transform:scale(1.1)}
+.page{display:none;padding:14px}
+.page.active{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:12px}
+.card-h{font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.card-h .more{font-size:12px;color:var(--pri);cursor:pointer}
+.fg{margin-bottom:10px}
+.fg label{display:block;font-size:12px;color:var(--sub);margin-bottom:4px;font-weight:600}
+.fg input,.fg select,.fg textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:#fff;color:var(--text)}
+.fg textarea{resize:vertical;font-family:inherit}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--pri)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.btn{display:inline-block;padding:8px 16px;background:var(--pri);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;text-align:center}
+.btn:active{transform:scale(.97)}
+.btn.outline{background:transparent;color:var(--pri);border:1px solid var(--pri)}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn-block{display:block;width:100%;padding:10px}
+.empty{text-align:center;padding:30px 0;color:var(--sub);font-size:13px}
+.ref-item{padding:10px 0;border-bottom:1px solid var(--border)}
+.ref-item:last-child{border-bottom:none}
+.ref-item .title{font-size:14px;font-weight:600;line-height:1.4}
+.ref-item .meta{font-size:12px;color:var(--sub);margin-top:3px}
+.ref-item .cite{font-size:12px;background:var(--pri-l);padding:6px 8px;border-radius:6px;margin-top:6px;line-height:1.5;border-left:3px solid var(--pri)}
+.ref-item .actions{display:flex;gap:6px;margin-top:6px}
+.tag{display:inline-block;font-size:10px;background:#f1f5f9;padding:2px 7px;border-radius:10px;color:var(--sub);margin-right:4px}
+.fmt-tabs{display:flex;gap:4px;margin-bottom:8px}
+.fmt-tab{flex:1;text-align:center;padding:5px;font-size:12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--sub)}
+.fmt-tab.active{background:var(--pri);color:#fff;border-color:var(--pri)}
+.outline-item{padding:10px 0;border-bottom:1px solid var(--border)}
+.outline-item:last-child{border-bottom:none}
+.outline-item .topic{font-size:14px;font-weight:600}
+.outline-item .type{font-size:11px;color:var(--pri);margin-top:2px}
+.outline-item .sections{margin-top:8px;font-size:12px;color:var(--sub);line-height:1.8}
+.plag-result{text-align:center;padding:16px 0}
+.plag-pct{font-size:36px;font-weight:800;line-height:1}
+.plag-label{font-size:13px;color:var(--sub);margin-top:4px}
+.plag-bar{height:8px;background:#f1f5f9;border-radius:4px;margin:12px 0;overflow:hidden}
+.plag-bar-fill{height:100%;border-radius:4px;transition:width .5s}
+.level-low{color:var(--green)}
+.level-mid{color:var(--amber)}
+.level-high{color:var(--red)}
+.phrases{margin-top:10px}
+.phrases .ph{display:inline-block;font-size:11px;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;margin:2px}
+@media(min-width:900px){body{max-width:900px}.tabbar{max-width:900px}.row2{grid-template-columns:1fr 1fr 1fr}.topbar{text-align:center;padding:22px 0}.topbar-row{justify-content:center}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <a href="/" class="back-btn">‹</a>
+    <h1>📝 学术模块</h1>
+  </div>
+  <div class="sub">文献管理 · 论文大纲 · 查重预检</div>
+</div>
+
+<!-- 文献格式转换 -->
+<div class="page active" id="p-ref"></div>
+<!-- 论文大纲 -->
+<div class="page" id="p-outline"></div>
+<!-- 查重预检 -->
+<div class="page" id="p-plag"></div>
+
+<div class="tabbar">
+  <div class="tab active" onclick="go('ref')"><div class="ic">📚</div><div class="lb">文献</div></div>
+  <div class="tab" onclick="go('outline')"><div class="ic">📋</div><div class="lb">大纲</div></div>
+  <div class="tab" onclick="go('plag')"><div class="ic">🔍</div><div class="lb">查重</div></div>
+</div>
+
+<script>
+const API = {
+  get: u => fetch(u).then(r => r.json()),
+  post: (u, b) => fetch(u, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(b)}).then(r => r.json()),
+  del: u => fetch(u, {method:'DELETE'}).then(r => r.json()),
+};
+let curFmt = 'gbt';
+let refs = [];
+
+function go(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  const map = {ref:'p-ref', outline:'p-outline', plag:'p-plag'};
+  document.getElementById(map[p]).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (p === 'ref') renderRefs();
+  if (p === 'outline') renderOutlines();
+}
+
+// ── 文献 ──
+async function renderRefs() {
+  refs = await API.get('/api/references');
+  const el = document.getElementById('p-ref');
+  let h = '<div class="card"><div class="card-h">📚 添加文献 <span class="more" onclick="toggleForm()">展开</span></div>';
+  h += '<div id="refForm" style="display:none">';
+  h += '<div class="fg"><label>标题 *</label><input id="rTitle" placeholder="论文标题"></div>';
+  h += '<div class="fg"><label>作者（逗号分隔）*</label><input id="rAuthors" placeholder="张三,李四"></div>';
+  h += '<div class="row2"><div class="fg"><label>类型</label><select id="rType"><option value="journal">期刊论文[J]</option><option value="conference">会议论文[C]</option><option value="book">图书[M]</option><option value="thesis">学位论文[D]</option></select></div>';
+  h += '<div class="fg"><label>年份</label><input id="rYear" placeholder="2024"></div></div>';
+  h += '<div class="fg"><label>期刊/会议名</label><input id="rJournal" placeholder="计算机学报"></div>';
+  h += '<div class="row3"><div class="fg"><label>卷</label><input id="rVol" placeholder="47"></div>';
+  h += '<div class="fg"><label>期</label><input id="rIssue" placeholder="3"></div>';
+  h += '<div class="fg"><label>页码</label><input id="rPages" placeholder="512-528"></div></div>';
+  h += '<div class="fg"><label>标签（逗号分隔）</label><input id="rTags" placeholder="AI,医学"></div>';
+  h += '<button class="btn btn-block" onclick="addRef()">添加文献</button>';
+  h += '</div></div>';
+
+  h += '<div class="card"><div class="card-h">📚 文献库 (' + refs.length + ')</div>';
+  h += '<div class="fmt-tabs"><div class="fmt-tab active" onclick="setFmt(\'gbt\')">GB/T 7714</div><div class="fmt-tab" onclick="setFmt(\'apa\')">APA</div><div class="fmt-tab" onclick="setFmt(\'mla\')">MLA</div></div>';
+  if (refs.length === 0) {
+    h += '<div class="empty">暂无文献，点击上方添加</div>';
+  } else {
+    refs.forEach(r => {
+      const fmtMap = {gbt:'cite_gbt', apa:'cite_apa', mla:'cite_mla'};
+      h += '<div class="ref-item">';
+      h += '<div class="title">' + r.title + '</div>';
+      h += '<div class="meta">' + (r.authors||[]).join(', ') + ' · ' + (r.year||'') + ' · ' + (r.journal||'') + '</div>';
+      if (r.tags && r.tags.length) h += '<div style="margin-top:4px">' + r.tags.map(t=>'<span class="tag">'+t+'</span>').join('') + '</div>';
+      h += '<div class="cite" id="cite-' + r.id + '">' + formatRef(r, curFmt) + '</div>';
+      h += '<div class="actions"><button class="btn sm outline" onclick="copyCite(\'' + r.id + '\')">复制引用</button><button class="btn sm" style="background:var(--red)" onclick="delRef(\'' + r.id + '\')">删除</button></div>';
+      h += '</div>';
+    });
+  }
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+function formatRef(r, fmt) {
+  // 前端格式化（和后端逻辑一致）
+  const a = r.authors || [];
+  const t = r.title || '';
+  const y = r.year || '';
+  const j = r.journal || '';
+  const v = r.volume || '';
+  const i = r.issue || '';
+  const p = r.pages || '';
+  const as = a.join(', ');
+  if (fmt === 'gbt') return as + '. ' + t + '[J]. ' + j + ', ' + y + ', ' + v + '(' + i + '): ' + p + '.';
+  if (fmt === 'apa') return as + ' (' + y + '). ' + t + '. ' + j + ', ' + v + '(' + i + '), ' + p + '.';
+  return as + '. "' + t + '." ' + j + ', vol. ' + v + ', no. ' + i + ', ' + y + ', pp. ' + p + '.';
+}
+
+function setFmt(f) {
+  curFmt = f;
+  document.querySelectorAll('.fmt-tab').forEach((el, i) => {
+    el.classList.toggle('active', ['gbt','apa','mla'][i] === f);
+  });
+  refs.forEach(r => {
+    const el = document.getElementById('cite-' + r.id);
+    if (el) el.textContent = formatRef(r, f);
+  });
+}
+
+function toggleForm() {
+  const f = document.getElementById('refForm');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function addRef() {
+  const body = {
+    title: document.getElementById('rTitle').value,
+    authors: document.getElementById('rAuthors').value,
+    type: document.getElementById('rType').value,
+    year: document.getElementById('rYear').value,
+    journal: document.getElementById('rJournal').value,
+    volume: document.getElementById('rVol').value,
+    issue: document.getElementById('rIssue').value,
+    pages: document.getElementById('rPages').value,
+    tags: document.getElementById('rTags').value,
+  };
+  if (!body.title || !body.authors) { alert('请填写标题和作者'); return; }
+  await API.post('/api/references', body);
+  renderRefs();
+}
+
+async function delRef(id) {
+  if (!confirm('确认删除？')) return;
+  await API.del('/api/references/' + id);
+  renderRefs();
+}
+
+function copyCite(id) {
+  const el = document.getElementById('cite-' + id);
+  if (el) {
+    navigator.clipboard.writeText(el.textContent).then(() => {
+      alert('引用已复制到剪贴板');
+    }).catch(() => {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = el.textContent;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      alert('引用已复制');
+    });
+  }
+}
+
+// ── 论文大纲 ──
+async function renderOutlines() {
+  const outlines = await API.get('/api/outlines');
+  const el = document.getElementById('p-outline');
+  let h = '<div class="card"><div class="card-h">📋 生成论文大纲</div>';
+  h += '<div class="fg"><label>论文主题 *</label><input id="oTopic" placeholder="如：深度学习在医学影像中的应用"></div>';
+  h += '<div class="fg"><label>论文类型</label><select id="oType">';
+  h += '<option value="review">文献综述</option>';
+  h += '<option value="empirical">实证研究</option>';
+  h += '<option value="case">案例研究</option>';
+  h += '<option value="experiment">实验研究</option>';
+  h += '</select></div>';
+  h += '<button class="btn btn-block" onclick="genOutline()">生成大纲</button>';
+  h += '</div>';
+
+  h += '<div class="card"><div class="card-h">📋 已生成大纲 (' + outlines.length + ')</div>';
+  if (outlines.length === 0) {
+    h += '<div class="empty">暂无大纲，输入主题生成</div>';
+  } else {
+    outlines.forEach(o => {
+      h += '<div class="outline-item">';
+      h += '<div class="topic">' + o.topic + '</div>';
+      h += '<div class="type">' + (o.type_name || o.type) + ' · ' + (o.created||'').slice(0,10) + '</div>';
+      h += '<div class="sections">' + o.sections.map(s => s).join('<br>') + '</div>';
+      h += '<div class="actions" style="margin-top:8px"><button class="btn sm outline" onclick="copyOutline(\'' + o.id + '\')">复制大纲</button></div>';
+      h += '</div>';
+    });
+  }
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+async function genOutline() {
+  const topic = document.getElementById('oTopic').value;
+  if (!topic) { alert('请输入论文主题'); return; }
+  const type = document.getElementById('oType').value;
+  await API.post('/api/outlines', {topic, type});
+  renderOutlines();
+}
+
+function copyOutline(id) {
+  const items = document.querySelectorAll('.outline-item');
+  // 简单实现：找到对应项并复制
+  alert('请手动选择大纲文本复制');
+}
+
+// ── 查重预检 ──
+function renderPlag() {
+  const el = document.getElementById('p-plag');
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-h">🔍 查重预检（本地 n-gram 算法）</div>
+      <div class="fg"><label>文本 A（原文）</label><textarea id="t1" rows="5" placeholder="粘贴第一段文本..."></textarea></div>
+      <div class="fg"><label>文本 B（待检测）</label><textarea id="t2" rows="5" placeholder="粘贴第二段文本..."></textarea></div>
+      <div class="row2">
+        <div class="fg"><label>n-gram 长度</label><select id="ngN"><option value="2">2-gram</option><option value="3" selected>3-gram</option><option value="4">4-gram</option></select></div>
+        <div class="fg" style="display:flex;align-items:flex-end"><button class="btn btn-block" onclick="checkPlag()">开始检测</button></div>
+      </div>
+    </div>
+    <div id="plagResult"></div>
+    <div class="card" style="font-size:12px;color:var(--sub);line-height:1.6">
+      <b>说明：</b> 本工具基于 n-gram + Jaccard 算法进行本地文本相似度检测，适用于自查段落重复。不是学术查重系统（如知网/万方），结果仅供参考。
+    </div>
+  `;
+}
+
+async function checkPlag() {
+  const t1 = document.getElementById('t1').value;
+  const t2 = document.getElementById('t2').value;
+  const n = parseInt(document.getElementById('ngN').value);
+  if (!t1 || !t2) { alert('请输入两段文本'); return; }
+  const res = await API.post('/api/plagiarism-check', {text1: t1, text2: t2, n});
+  const el = document.getElementById('plagResult');
+  if (!res.ok) { el.innerHTML = '<div class="card"><div class="empty">' + res.error + '</div></div>'; return; }
+  const colors = {low: 'var(--green)', mid: 'var(--amber)', high: 'var(--red)'};
+  const labels = {low: '✅ 相似度低', mid: '🟡 建议修改', high: '🔴 需重点修改'};
+  let h = '<div class="card"><div class="card-h">🔍 检测结果</div>';
+  h += '<div class="plag-result">';
+  h += '<div class="plag-pct level-' + res.level + '" style="color:' + colors[res.level] + '">' + res.similarity + '%</div>';
+  h += '<div class="plag-label">' + labels[res.level] + '</div>';
+  h += '<div class="plag-bar"><div class="plag-bar-fill" style="width:' + res.similarity + '%;background:' + colors[res.level] + '"></div></div>';
+  h += '<div style="font-size:12px;color:var(--sub)">重复片段: ' + res.common_count + ' / 总独立片段: ' + res.total_unique + '</div>';
+  h += '</div>';
+  if (res.common_phrases && res.common_phrases.length) {
+    h += '<div class="phrases"><div style="font-size:12px;font-weight:600;margin-bottom:6px">重复片段示例：</div>';
+    res.common_phrases.forEach(p => { h += '<span class="ph">' + p + '</span>'; });
+    h += '</div>';
+  }
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+// 初始化
+renderRefs();
+renderPlag();
+</script>
+</body>
+</html>

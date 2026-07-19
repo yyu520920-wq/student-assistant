@@ -13,12 +13,21 @@ from urllib.parse import urlparse, parse_qs
 # 把 scripts 目录加入路径
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 from engine import (
-    BASE, CUR, WEEKDAYS,
+    BASE, CUR, WEEKDAYS, REF_TYPES, OUTLINE_TEMPLATES,
     _d, _r, _w, _sd, _cs, _sc, _now, _today, _parse_date,
-    _tf, _lf, _hbf, _pf, _cdf, _sf, _hf, _ef, _df, _gf, _rf, _prf, _wf, _plf
+    _tf, _lf, _hbf, _pf, _cdf, _sf, _hf, _ef, _df, _gf, _rf, _prf, _wf, _plf,
+    _ref_f, _ol_f, format_citation, _tokenize, _ngrams
 )
 
-APP_HTML = Path(__file__).parent / "app.html"
+WEB_DIR = Path(__file__).parent
+INDEX_HTML = WEB_DIR / "index.html"
+MODULES = {
+    "academic": WEB_DIR / "academic.html",
+    "scholar": WEB_DIR / "scholar.html",
+    "coding": WEB_DIR / "coding.html",
+    "career": WEB_DIR / "career.html",
+    "ai": WEB_DIR / "ai.html",
+}
 
 
 def sem():
@@ -332,6 +341,104 @@ def api_export():
     }
 
 
+# ══ 学术模块 API ══
+
+def api_references():
+    return _r(_ref_f())
+
+
+def api_reference_add(body):
+    data = _r(_ref_f())
+    rid = f"ref{len(data) + 1:03d}"
+    authors = body.get("authors", "")
+    author_list = [a.strip() for a in authors.split(",") if a.strip()] if isinstance(authors, str) else authors
+    tags = body.get("tags", "")
+    tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
+    ref = {
+        "id": rid, "type": body.get("type", "journal"),
+        "title": body.get("title", ""), "authors": author_list,
+        "journal": body.get("journal", ""), "year": body.get("year", ""),
+        "volume": body.get("volume", ""), "issue": body.get("issue", ""),
+        "pages": body.get("pages", ""), "doi": body.get("doi", ""),
+        "publisher": body.get("publisher", ""), "location": body.get("location", ""),
+        "url": body.get("url", ""), "tags": tag_list,
+        "note": body.get("note", ""), "created": _now(),
+    }
+    data.append(ref)
+    _w(_ref_f(), data)
+    return {"ok": True, "id": rid, "ref": ref,
+            "cite_gbt": format_citation(ref, "gbt"),
+            "cite_apa": format_citation(ref, "apa"),
+            "cite_mla": format_citation(ref, "mla")}
+
+
+def api_reference_delete(rid):
+    data = _r(_ref_f())
+    new = [r for r in data if r["id"] != rid]
+    if len(new) == len(data):
+        return {"ok": False, "error": "未找到"}
+    _w(_ref_f(), new)
+    return {"ok": True}
+
+
+def api_cite_format(body):
+    """根据文献ID和格式生成引用"""
+    data = _r(_ref_f())
+    ref = next((r for r in data if r["id"] == body.get("id")), None)
+    if not ref:
+        return {"ok": False, "error": "未找到文献"}
+    fmt = body.get("format", "gbt")
+    return {"ok": True, "format": fmt, "cite": format_citation(ref, fmt)}
+
+
+def api_outlines():
+    return _r(_ol_f())
+
+
+def api_outline_add(body):
+    data = _r(_ol_f())
+    topic = body.get("topic", "")
+    otype = body.get("type", "review")
+    tpl = OUTLINE_TEMPLATES.get(otype)
+    if not tpl:
+        return {"ok": False, "error": f"未知类型: {otype}"}
+    oid = f"ol{len(data) + 1:03d}"
+    outline = {
+        "id": oid, "topic": topic, "type": otype, "type_name": tpl["name"],
+        "sections": tpl["sections"], "created": _now(),
+    }
+    data.append(outline)
+    _w(_ol_f(), data)
+    return {"ok": True, "outline": outline}
+
+
+def api_plagiarism_check(body):
+    """查重预检：两段文本的 n-gram Jaccard 相似度"""
+    t1 = body.get("text1", "")
+    t2 = body.get("text2", "")
+    n = body.get("n", 3)
+    g1 = _ngrams(_tokenize(t1), n)
+    g2 = _ngrams(_tokenize(t2), n)
+    if not g1 or not g2:
+        return {"ok": False, "error": "文本太短"}
+    inter = g1 & g2
+    union = g1 | g2
+    sim = len(inter) / len(union)
+    # 提取重复片段
+    common_phrases = []
+    for ng in sorted(inter)[:10]:
+        phrase = "".join(ng) if any("\u4e00" <= c <= "\u9fff" for c in "".join(ng)) else " ".join(ng)
+        common_phrases.append(phrase)
+    return {
+        "ok": True,
+        "similarity": round(sim * 100, 1),
+        "common_count": len(inter),
+        "total_unique": len(union),
+        "common_phrases": common_phrases,
+        "level": "low" if sim < 0.25 else ("mid" if sim < 0.5 else "high"),
+    }
+
+
 # ── 路由表 ──
 
 class Handler(BaseHTTPRequestHandler):
@@ -378,10 +485,20 @@ class Handler(BaseHTTPRequestHandler):
         query = parse_qs(parsed.query)
 
         if path == "/" or path == "/index.html":
-            if APP_HTML.exists():
-                self._send_file(APP_HTML, "text/html; charset=utf-8")
+            fp = INDEX_HTML if INDEX_HTML.exists() else MODULES.get("academic")
+            if fp and fp.exists():
+                self._send_file(fp, "text/html; charset=utf-8")
             else:
-                self._send_html("<h1>app.html 未找到</h1>")
+                self._send_html("<h1>首页未找到</h1>")
+            return
+        # 模块页面路由 /m/academic /m/scholar 等
+        if path.startswith("/m/"):
+            mod = path[3:]
+            fp = MODULES.get(mod)
+            if fp and fp.exists():
+                self._send_file(fp, "text/html; charset=utf-8")
+            else:
+                self._send_html(f"<h1>模块 '{mod}' 未找到</h1><p><a href='/'>返回首页</a></p>")
             return
         if path == "/api/today":
             return self._send_json(api_today())
@@ -409,6 +526,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._send_json(api_semesters())
         if path == "/api/export":
             return self._send_json(api_export())
+        if path == "/api/references":
+            return self._send_json(api_references())
+        if path == "/api/outlines":
+            return self._send_json(api_outlines())
         self._send_json({"error": "not found"}, 404)
 
     def do_POST(self):
@@ -433,6 +554,14 @@ class Handler(BaseHTTPRequestHandler):
             return self._send_json(api_pomodoro_add(body))
         if path == "/api/semesters/switch":
             return self._send_json(api_semester_switch(body))
+        if path == "/api/references":
+            return self._send_json(api_reference_add(body))
+        if path == "/api/outlines":
+            return self._send_json(api_outline_add(body))
+        if path == "/api/cite-format":
+            return self._send_json(api_cite_format(body))
+        if path == "/api/plagiarism-check":
+            return self._send_json(api_plagiarism_check(body))
         # /api/tasks/<id>/done
         if len(parts) == 4 and parts[0] == "api" and parts[1] == "tasks" and parts[3] == "done":
             return self._send_json(api_task_done(parts[2]))
@@ -462,6 +591,9 @@ class Handler(BaseHTTPRequestHandler):
         # /api/tasks/<id>
         if len(parts) == 3 and parts[0] == "api" and parts[1] == "tasks":
             return self._send_json(api_task_delete(parts[2]))
+        # /api/references/<id>
+        if len(parts) == 3 and parts[0] == "api" and parts[1] == "references":
+            return self._send_json(api_reference_delete(parts[2]))
         self._send_json({"error": "not found"}, 404)
 
     def do_OPTIONS(self):

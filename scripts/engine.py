@@ -84,6 +84,9 @@ def _rf(s=None): return _sd(s) / "review.json"
 def _prf(s=None): return _sd(s) / "practice.json"
 def _wf(s=None): return _sd(s) / "wrong_questions.json"
 def _plf(s=None): return _sd(s) / "plan.json"
+# 学术模块（全局，不按学期）
+def _ref_f(): return BASE / "references.json"
+def _ol_f(): return BASE / "outlines.json"
 
 
 def _now(): return datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -651,7 +654,287 @@ def semester_list():
             print(f"  {mark} {sd.name}")
 
 
-# ── CLI ──
+# ══ 学术模块 ══
+
+REF_TYPES = {"journal": "期刊论文[J]", "conference": "会议论文[C]",
+             "book": "图书[M]", "thesis": "学位论文[D]", "web": "网页[EB/OL]"}
+
+OUTLINE_TEMPLATES = {
+    "review": {
+        "name": "文献综述",
+        "sections": [
+            "一、引言（研究背景与意义）",
+            "二、核心概念界定",
+            "三、文献综述",
+            "  3.1 理论基础研究",
+            "  3.2 研究方法综述",
+            "  3.3 研究成果综述",
+            "四、研究现状评析",
+            "五、存在的问题与不足",
+            "六、未来研究方向",
+            "七、结论",
+            "参考文献",
+        ],
+    },
+    "empirical": {
+        "name": "实证研究",
+        "sections": [
+            "一、引言",
+            "  1.1 研究背景",
+            "  1.2 研究问题与意义",
+            "二、文献回顾与研究假设",
+            "  2.1 文献回顾",
+            "  2.2 研究假设",
+            "三、研究方法",
+            "  3.1 研究设计",
+            "  3.2 数据来源与样本",
+            "  3.3 变量定义",
+            "  3.4 模型构建",
+            "四、实证结果与分析",
+            "  4.1 描述性统计",
+            "  4.2 相关性分析",
+            "  4.3 回归分析",
+            "  4.4 稳健性检验",
+            "五、结论与政策建议",
+            "参考文献",
+        ],
+    },
+    "case": {
+        "name": "案例研究",
+        "sections": [
+            "一、引言",
+            "  1.1 研究背景",
+            "  1.2 案例选择依据",
+            "二、案例背景介绍",
+            "  2.1 案例概况",
+            "  2.2 发展历程",
+            "三、案例分析",
+            "  3.1 分析框架",
+            "  3.2 案例剖析",
+            "四、问题发现与讨论",
+            "五、解决方案与建议",
+            "六、经验总结与启示",
+            "参考文献",
+        ],
+    },
+    "experiment": {
+        "name": "实验研究",
+        "sections": [
+            "一、引言",
+            "  1.1 研究背景与问题",
+            "  1.2 研究意义",
+            "二、文献回顾",
+            "  2.1 理论基础",
+            "  2.2 相关研究",
+            "  2.3 研究假设",
+            "三、实验方法",
+            "  3.1 实验设计",
+            "  3.2 实验材料与设备",
+            "  3.3 实验流程",
+            "  3.4 数据采集与处理",
+            "四、实验结果",
+            "  4.1 结果呈现",
+            "  4.2 数据分析",
+            "五、讨论",
+            "  5.1 结果解释",
+            "  5.2 与已有研究对比",
+            "  5.3 局限性",
+            "六、结论",
+            "参考文献",
+        ],
+    },
+}
+
+
+def _tokenize(text):
+    """简单分词：中文字符按字，英文按词"""
+    import re
+    return re.findall(r"[\u4e00-\u9fff]|[a-zA-Z]+|[0-9]+", text.lower())
+
+
+def _ngrams(tokens, n):
+    return set(tuple(tokens[i:i + n]) for i in range(len(tokens) - n + 1))
+
+
+def format_citation(ref, fmt="gbt"):
+    """将文献对象格式化为引用字符串（支持 GB/T 7714、APA、MLA）"""
+    authors = ref.get("authors", [])
+    title = ref.get("title", "")
+    year = ref.get("year", "")
+    rtype = ref.get("type", "journal")
+
+    if fmt == "gbt":
+        author_str = ", ".join(authors[:3])
+        if len(authors) > 3:
+            author_str += ", 等"
+        tag = {"journal": "J", "conference": "C", "book": "M", "thesis": "D", "web": "EB/OL"}.get(rtype, "J")
+        if rtype == "journal":
+            j = ref.get("journal", "")
+            v = ref.get("volume", "")
+            i = ref.get("issue", "")
+            p = ref.get("pages", "")
+            return f"{author_str}. {title}[{tag}]. {j}, {year}, {v}({i}): {p}."
+        elif rtype == "conference":
+            c = ref.get("journal", "")
+            loc = ref.get("location", "")
+            pub = ref.get("publisher", "")
+            p = ref.get("pages", "")
+            return f"{author_str}. {title}[C]//{c}. {loc}: {pub}, {year}: {p}."
+        elif rtype == "book":
+            pub = ref.get("publisher", "")
+            loc = ref.get("location", "")
+            return f"{author_str}. {title}[M]. {loc}: {pub}, {year}."
+        elif rtype == "thesis":
+            school = ref.get("publisher", "")
+            return f"{author_str}. {title}[D]. {school}, {year}."
+        else:
+            url = ref.get("url", "")
+            return f"{author_str}. {title}[EB/OL]. ({year}). {url}."
+
+    elif fmt == "apa":
+        author_str = ", ".join(authors) if authors else ""
+        if rtype == "journal":
+            j = ref.get("journal", "")
+            v = ref.get("volume", "")
+            i = ref.get("issue", "")
+            p = ref.get("pages", "")
+            i_str = f"({i})" if i else ""
+            return f"{author_str} ({year}). {title}. {j}, {v}{i_str}, {p}."
+        elif rtype == "book":
+            pub = ref.get("publisher", "")
+            return f"{author_str} ({year}). {title}. {pub}."
+        else:
+            return f"{author_str} ({year}). {title}."
+
+    elif fmt == "mla":
+        author_str = ", ".join(authors) if authors else ""
+        if rtype == "journal":
+            j = ref.get("journal", "")
+            v = ref.get("volume", "")
+            i = ref.get("issue", "")
+            p = ref.get("pages", "")
+            return f'{author_str}. "{title}." {j}, vol. {v}, no. {i}, {year}, pp. {p}.'
+        elif rtype == "book":
+            pub = ref.get("publisher", "")
+            return f"{author_str}. {title}. {pub}, {year}."
+        else:
+            return f'{author_str}. "{title}." {year}.'
+
+
+def ref_add(title, authors, rtype="journal", journal="", year="", volume="",
+            issue="", pages="", doi="", publisher="", location="", url="", tags="", note=""):
+    data = _r(_ref_f())
+    rid = f"ref{len(data) + 1:03d}"
+    author_list = [a.strip() for a in authors.split(",") if a.strip()] if isinstance(authors, str) else authors
+    tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
+    ref = {
+        "id": rid, "type": rtype, "title": title, "authors": author_list,
+        "journal": journal, "year": year, "volume": volume, "issue": issue,
+        "pages": pages, "doi": doi, "publisher": publisher, "location": location,
+        "url": url, "tags": tag_list, "note": note, "created": _now(),
+    }
+    data.append(ref)
+    _w(_ref_f(), data)
+    print(f"✅ 文献已添加: [{rid}] {title}")
+    print(f"   格式预览(GB/T 7714): {format_citation(ref, 'gbt')}")
+
+
+def ref_list(tag=None):
+    data = _r(_ref_f())
+    if tag:
+        data = [r for r in data if tag in r.get("tags", [])]
+    if not data:
+        print("📭 暂无文献记录"); return
+    print(f"\n📚 文献库 ({len(data)}条)")
+    for r in data:
+        authors = ", ".join(r.get("authors", [])[:2])
+        if len(r.get("authors", [])) > 2:
+            authors += " 等"
+        print(f"  [{r['id']}] {authors} ({r.get('year','')}) {r['title']}")
+        if r.get("journal"):
+            print(f"       来源: {r['journal']}")
+
+
+def ref_delete(rid):
+    data = _r(_ref_f())
+    new = [r for r in data if r["id"] != rid]
+    if len(new) == len(data):
+        print(f"❌ 未找到文献: {rid}"); return
+    _w(_ref_f(), new)
+    print(f"✅ 已删除文献: {rid}")
+
+
+def ref_cite(rid, fmt="gbt"):
+    data = _r(_ref_f())
+    ref = next((r for r in data if r["id"] == rid), None)
+    if not ref:
+        print(f"❌ 未找到文献: {rid}"); return
+    fmt_name = {"gbt": "GB/T 7714", "apa": "APA", "mla": "MLA"}.get(fmt, fmt.upper())
+    print(f"\n📄 引用格式 ({fmt_name})")
+    print(f"   {format_citation(ref, fmt)}")
+
+
+def outline_generate(topic, otype="review"):
+    tpl = OUTLINE_TEMPLATES.get(otype)
+    if not tpl:
+        print(f"❌ 未知论文类型: {otype}（可选: review/empirical/case/experiment）"); return
+    data = _r(_ol_f())
+    oid = f"ol{len(data) + 1:03d}"
+    outline = {
+        "id": oid, "topic": topic, "type": otype, "type_name": tpl["name"],
+        "sections": tpl["sections"], "created": _now(),
+    }
+    data.append(outline)
+    _w(_ol_f(), data)
+    print(f"✅ 论文大纲已生成: [{oid}]")
+    print(f"   主题: {topic}")
+    print(f"   类型: {tpl['name']}")
+    print(f"\n📋 大纲结构:")
+    for s in tpl["sections"]:
+        print(f"   {s}")
+
+
+def outline_list():
+    data = _r(_ol_f())
+    if not data:
+        print("📭 暂无大纲记录"); return
+    print(f"\n📋 论文大纲 ({len(data)}条)")
+    for o in data:
+        print(f"  [{o['id']}] {o['topic']} ({o.get('type_name','')})")
+
+
+def plagiarism_check(text1, text2, n=3):
+    """n-gram Jaccard 相似度检测"""
+    t1 = _tokenize(text1)
+    t2 = _tokenize(text2)
+    g1 = _ngrams(t1, n)
+    g2 = _ngrams(t2, n)
+    if not g1 or not g2:
+        print("⚠️ 文本太短，无法进行有效检测"); return
+    inter = g1 & g2
+    union = g1 | g2
+    sim = len(inter) / len(union)
+    pct = round(sim * 100, 1)
+    print(f"\n🔍 查重预检结果")
+    print(f"   相似度: {pct}%")
+    print(f"   重复片段数: {len(inter)}")
+    print(f"   总独立片段数: {len(union)}")
+    if pct < 10:
+        print(f"   评估: ✅ 相似度极低，基本无重复")
+    elif pct < 25:
+        print(f"   评估: 🟢 相似度较低，可接受")
+    elif pct < 50:
+        print(f"   评估: 🟡 相似度中等，建议修改")
+    else:
+        print(f"   评估: 🔴 相似度较高，需重点修改")
+    if inter:
+        print(f"\n   重复片段示例（前5个）:")
+        for i, ng in enumerate(sorted(inter)[:5]):
+            phrase = "".join(ng) if any("\u4e00" <= c <= "\u9fff" for c in "".join(ng)) else " ".join(ng)
+            print(f"     {i+1}. {phrase}")
+
+
+
 def main():
     p = argparse.ArgumentParser(
         description="🎓 大学日程计划 v1.3 — 非交互式参数驱动（AI 可直接调用）",
@@ -785,6 +1068,43 @@ def main():
     sw = ses.add_parser("switch", help="切换学期"); sw.add_argument("name")
     ses.add_parser("list", help="学期列表")
 
+    # ref（文献管理）
+    rp = sp.add_parser("ref", help="文献管理")
+    rs = rp.add_subparsers(dest="sub")
+    ra = rs.add_parser("add", help="添加文献")
+    ra.add_argument("--title", required=True)
+    ra.add_argument("--authors", required=True, help="作者，逗号分隔")
+    ra.add_argument("--type", default="journal", choices=list(REF_TYPES.keys()))
+    ra.add_argument("--journal", default="", help="期刊/会议名")
+    ra.add_argument("--year", default="")
+    ra.add_argument("--volume", default="")
+    ra.add_argument("--issue", default="")
+    ra.add_argument("--pages", default="")
+    ra.add_argument("--doi", default="")
+    ra.add_argument("--publisher", default="")
+    ra.add_argument("--location", default="")
+    ra.add_argument("--url", default="")
+    ra.add_argument("--tags", default="", help="标签，逗号分隔")
+    ra.add_argument("--note", default="")
+    rl = rs.add_parser("list", help="文献列表"); rl.add_argument("--tag", default=None)
+    rd = rs.add_parser("delete", help="删除文献"); rd.add_argument("id")
+    rc = rs.add_parser("cite", help="生成引用格式")
+    rc.add_argument("id"); rc.add_argument("--format", default="gbt", choices=["gbt", "apa", "mla"])
+
+    # outline（论文大纲）
+    op = sp.add_parser("outline", help="论文大纲生成")
+    os_ = op.add_subparsers(dest="sub")
+    og = os_.add_parser("generate", help="生成大纲")
+    og.add_argument("--topic", required=True)
+    og.add_argument("--type", default="review", choices=list(OUTLINE_TEMPLATES.keys()))
+    os_.add_parser("list", help="大纲列表")
+
+    # plagiarism（查重预检）
+    plp = sp.add_parser("plagiarism", help="查重预检")
+    plp.add_argument("--text1", required=True, help="文本1")
+    plp.add_argument("--text2", required=True, help="文本2")
+    plp.add_argument("--n", type=int, default=3, help="n-gram长度（默认3）")
+
     args = p.parse_args()
     if not args.cmd:
         p.print_help()
@@ -887,6 +1207,31 @@ def main():
             semester_list()
         else:
             sep.print_help()
+
+    elif args.cmd == "ref":
+        if args.sub == "add":
+            ref_add(args.title, args.authors, args.type, args.journal, args.year,
+                    args.volume, args.issue, args.pages, args.doi, args.publisher,
+                    args.location, args.url, args.tags, args.note)
+        elif args.sub == "list":
+            ref_list(args.tag)
+        elif args.sub == "delete":
+            ref_delete(args.id)
+        elif args.sub == "cite":
+            ref_cite(args.id, args.format)
+        else:
+            rp.print_help()
+
+    elif args.cmd == "outline":
+        if args.sub == "generate":
+            outline_generate(args.topic, args.type)
+        elif args.sub == "list":
+            outline_list()
+        else:
+            op.print_help()
+
+    elif args.cmd == "plagiarism":
+        plagiarism_check(args.text1, args.text2, args.n)
 
 
 if __name__ == "__main__":
