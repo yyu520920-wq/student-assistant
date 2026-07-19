@@ -1,71 +1,200 @@
-# 大学生全能助手 v1.1 🎓
+# 🎓 大学生全能助手 v1.1
 
-> 课表 · 作业 · 考试 · 期末复习 · 成长记录 · 目标管理 · 数据仪表盘 · Excel报表 · PPT生成
+> 基于**滴答清单**深度定制 — 专为大学生打造的时间管理与学习助手
 
-## 功能一览
+## ✨ 功能模块
 
-| 模块 | 功能 |
-|------|------|
-| 📅 **课表管理** | JSON/CSV导入、OCR截图识别、Web可视化 |
-| 📝 **作业管理** | 添加、查看、标记完成、紧急提醒 |
-| ⏰ **考试倒计时** | 可视化进度条、临近自动提醒 |
-| 📖 **期末复习** | 知识点清单、刷题追踪、错题本、复习计划自动生成 |
-| 🌱 **成长记录** | 每日打卡（学习/阅读/运动/早起）、心情日记、连续打卡统计 |
-| 🎯 **目标管理** | 长期/短期/每日目标、进度追踪、里程碑 |
-| 📊 **数据仪表盘** | Web端可视化图表：复习进度、学习趋势、目标完成率 |
-| 📥 **Excel 导出** | 一键导出7个Sheet：课表/作业/考试/复习/成长/目标/刷题 |
-| 🎨 **PPT 生成** | AI对话触发，3种模板：学术汇报/社团展示/课堂报告 |
-| 🔔 **桌面通知** | 后台常驻，作业/考试自动弹窗 |
-| 🔍 **OCR 识别** | 拍课表截图自动识别导入 |
-| 📚 **多学期** | 创建切换学期，数据隔离 |
-| 📤 **iCal 导出** | 导出 .ics 导入系统日历 |
+### 📝 任务管理（对标滴答清单）
+- **任务 CRUD**：添加、查看、完成、删除
+- **子任务**：每个任务支持多级子任务，可单独标记完成
+- **优先级**：🔴高 / 🟡中 / 🟢低 / ⚪无
+- **标签**：自由标签分类，如 `#数学` `#作业` `#社团`
+- **截止日期 & 提醒**：支持设置截止时间和提醒时间
+- **重复任务**：支持 daily/weekly/monthly/yearly 重复
 
-## 快速开始
+### 📋 清单分类
+- 默认 4 个清单：📥收集箱 / 📚学习 / 🏠生活 / 🚀项目
+- 支持自定义创建新清单，每个清单独立图标和颜色
 
+### 🔲 四象限视图（Eisenhower 矩阵）
+- 🔥 重要且紧急 → 立即做
+- ⭐ 重要不紧急 → 计划做
+- ⏰ 不重要紧急 → 委托做
+- 💤 不重要不紧急 → 尽量不做
+
+### 🔍 智能过滤器
+- 今天要做的事
+- 最近 7 天到期
+- 高优先级任务
+- 按标签筛选
+
+### ✅ 习惯打卡
+- 每日/每周习惯设定
+- 🔥 连续天数统计
+- 打卡日历追踪
+- 3 个示例习惯：早起、阅读、运动
+
+### 🍅 番茄专注
+- 25/45/15 分钟可选
+- 关联具体任务
+- 统计总次数和总时长
+- 今日番茄数统计
+
+### 🎯 倒数日
+- 考试、假期、生日等倒计时
+- 支持每年重复（如生日）
+- 🔴🟡🟢 颜色标识紧急度
+
+### 🏫 课表管理
+- JSON/CSV 格式导入
+- 按天分组查看
+- 今日课程快速查看
+- 9 门示例课程预置
+
+### 📝 作业管理
+- 添加/查看/标记完成
+- 按截止日期排序
+- 剩余天数标识
+
+### 📅 考试管理
+- 添加/查看考试
+- 可视化倒计时进度条 `▓▓▓░░░`
+- 临近考试自动提醒
+
+### 📊 今日概览
+- 今日课程汇总
+- 今日待办任务
+- 习惯打卡状态
+- 临近考试提醒（14天内）
+
+### 🔄 多学期管理
+- 创建/切换学期
+- 数据完全隔离
+- 默认学期预置
+
+### 📦 数据导出
+- 一键导出全部数据为 JSON
+- 含任务、清单、习惯、番茄、倒数日、课表、作业、考试
+
+## 🚀 快速开始
+
+### 1. 克隆项目
 ```bash
-git clone https://github.com/你的用户名/student-assistant.git
+git clone https://github.com/yyu520920-wq/student-assistant.git
 cd student-assistant
-bash install.sh
-python3 server.py
 ```
 
-浏览器打开 http://localhost:5000，六个 Tab 随便用。
-
-## 怎么用
-
-### Web 界面（最推荐）
+### 2. 初始化
 ```bash
-python3 server.py
-# 浏览器打开 localhost:5000
+python3 scripts/engine.py init
 ```
+自动创建示例数据：4个清单、4个任务、3个习惯、3个倒数日、9门课、2个作业、2场考试
 
-### 命令行
+### 3. 开始使用
+
+#### CLI 命令行
 ```bash
-python3 scripts/engine.py remind              # 今日提醒
-python3 scripts/engine.py review knowledge list  # 复习进度
-python3 scripts/engine.py daily stats         # 成长统计
-python3 scripts/engine.py goal list           # 目标列表
-python3 scripts/export_excel.py               # 导出Excel
-python3 scripts/generate_ppt.py "主题"        # 生成PPT
+# 今日概览
+python3 scripts/engine.py today
+
+# 查看任务
+python3 scripts/engine.py task list
+
+# 添加任务（交互式）
+python3 scripts/engine.py task add
+
+# 四象限视图
+python3 scripts/engine.py eisenhower
+
+# 习惯打卡
+python3 scripts/engine.py habit list
+
+# 番茄专注 25 分钟
+python3 scripts/engine.py pomodoro start
+
+# 倒数日
+python3 scripts/engine.py countdown list
+
+# 今日课表
+python3 scripts/engine.py schedule today
+
+# 考试倒计时
+python3 scripts/engine.py exam countdown
+
+# 导出全部数据
+python3 scripts/engine.py export
 ```
 
-### AI 对话
-对 AI 说"今天有什么课"、"复习进度"、"今日打卡"、"帮我做PPT"等。
+#### Web 可视化界面
+```bash
+# 安装依赖
+pip3 install flask
 
-## 项目结构
+# 启动服务
+python3 web/server.py
+
+# 浏览器访问
+# http://localhost:5000
+```
+
+Web 界面包含：
+- 📅 今日概览（统计卡片 + 课程/任务/习惯/考试）
+- 📝 任务管理（添加/筛选/完成/删除）
+- 📆 日历视图
+- 📋 看板视图（按清单分列）
+- 🔲 四象限视图
+- ✅ 习惯打卡
+- 🍅 番茄专注（含倒计时动画）
+- 🎯 倒数日
+- 🏫 课表
+- 📊 数据仪表盘（趋势图）
+
+## 📁 项目结构
 
 ```
 student-assistant/
-├── SKILL.md / README.md / install.sh / server.py / index.html
+├── SKILL.md              # AI Skill 入口（8 个问题标准）
+├── README.md             # 项目说明（本文件）
+├── LICENSE               # MIT 许可证
 ├── scripts/
-│   ├── engine.py          # 核心引擎（课表/作业/考试/复习/成长/目标）
-│   ├── export_excel.py    # Excel 报表导出
-│   ├── generate_ppt.py    # PPT 生成（3种模板）
-│   ├── notifier.py        # 桌面通知
-│   ├── ocr_schedule.py    # OCR 识别
-│   └── test.py            # 自动化测试
-└── references/
+│   └── engine.py         # 核心引擎（600+ 行，纯标准库）
+├── web/
+│   ├── server.py         # Flask Web API 服务（15+ REST 端点）
+│   ├── templates/
+│   │   └── index.html    # Web 前端页面
+│   └── static/
+│       ├── css/style.css # 滴答清单风格 UI
+│       └── js/app.js     # 前端 JS SPA 应用
+├── references/           # 参考文档
+└── assets/               # 素材资源
 ```
 
-## 许可证
-MIT License
+## 📊 数据存储
+
+所有数据存储在 `~/.student-assistant/` 目录下：
+
+```
+~/.student-assistant/
+├── current.json              # 当前学期
+└── semesters/
+    └── 默认学期/
+        ├── tasks.json        # 任务数据
+        ├── lists.json        # 清单数据
+        ├── habits.json       # 习惯数据
+        ├── pomodoro.json     # 番茄记录
+        ├── countdowns.json   # 倒数日
+        ├── schedule.json     # 课表
+        ├── homework.json     # 作业
+        └── exam.json         # 考试
+```
+
+## 🔧 技术栈
+
+- **Python 3.11+**（纯标准库，零依赖即可运行 CLI）
+- **Flask**（Web 界面依赖）
+- **JSON** 文件存储（无需数据库）
+- 原生 **HTML/CSS/JS**（Web 前端）
+
+## 📄 许可证
+
+MIT License — 详见 [LICENSE](LICENSE)

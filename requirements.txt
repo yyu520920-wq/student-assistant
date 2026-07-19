@@ -1,6 +1,0 @@
-plyer>=2.1
-easyocr>=1.7
-Pillow>=10.0
-flask>=3.0
-python-pptx>=0.6
-openpyxl>=3.1
